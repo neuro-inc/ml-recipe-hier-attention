@@ -12,8 +12,8 @@ TItem = Tuple[List[str], float]
 class ImdbReviewsDataset:
     _path_to_data: Path
     _n_files: int
-    _data: Tuple[TItem]
-    _token_regex: re.Pattern
+    _data: Tuple[TItem, ...]
+    _token_regex: re.Pattern  # type: ignore
 
     def __init__(self, path_to_data: Path):
         self._path_to_data = path_to_data
@@ -36,7 +36,7 @@ class ImdbReviewsDataset:
     def __len__(self) -> int:
         return self._n_files
 
-    def __getitem__(self, i: int):
+    def __getitem__(self, i: int) -> None:
         pass
 
     def get_i_review(self, i: int) -> TItem:
