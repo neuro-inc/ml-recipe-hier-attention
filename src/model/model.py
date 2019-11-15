@@ -1,8 +1,9 @@
-from typing import Dict
+from typing import Dict, Optional, Tuple
 
 import torch
 import torchtext
 from torch import nn, Tensor, LongTensor
+from torch import sigmoid
 from torch.nn.functional import cosine_similarity
 
 from src.model.dataset import IMBD_ROOT, ImdbReviewsDataset
@@ -14,12 +15,62 @@ class HAN(nn.Module):
     def __init__(self, vocab: Dict[str, int]):
         super().__init__()
 
+        hid, hid_fc = 100, 30
         self._embedding = get_pretrained_embedding(vocab)
 
-    def forward(self, x: LongTensor) -> Tensor:
-        # x is a tensor with shape of [n_txt, n_snt, n_words]
-        x = self._embedding(x)
-        return x
+        self._gru_word = nn.GRU(input_size=self._embedding.weight.shape[1],
+                                hidden_size=hid, batch_first=True,
+                                bidirectional=True)
+        self._gru_sent = nn.GRU(input_size=2 * hid, hidden_size=2 * hid,
+                                bidirectional=True, batch_first=True)
+
+        self._attn_word = nn.MultiheadAttention(num_heads=1, embed_dim=2 * hid)
+        self._attn_sent = nn.MultiheadAttention(num_heads=1, embed_dim=4 * hid)
+
+        self._fc1 = nn.Linear(in_features=4 * hid, out_features=hid_fc)
+        self._fc2 = nn.Linear(in_features=hid_fc, out_features=1)
+
+    def forward(self,
+                x: LongTensor,
+                need_weights: bool = True
+                ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
+        txt, snt, word = x.shape
+
+        # Words level
+        x = self._embedding(x)  # [txt, snt, word, emb]
+
+        x = x.view(-1, word, x.shape[3])  # [txt x snt, word, emb]
+
+        x, _ = self._gru_word(x)  # [txt x snt, word, 2 x hid]
+
+        x = x.permute(1, 0, 2)  # [word, txt x snt, 2 x hid]
+
+        x, words_weights = self._attn_word(key=x, value=x, query=x,
+                                           need_weights=need_weights
+                                           )  # [word, txt x snt, 2 x hid]
+
+        x = x.sum(dim=0)  # [txt x snt, 2 x hid]  TODO
+
+        # Sentences level
+        x = x.view(txt, snt, -1)  # [txt, snt, 2 x hid]
+
+        x, _ = self._gru_sent(x)  # [txt, sent, 4 x hid]
+
+        x = x.permute(1, 0, 2)  # [sent, txt, 4 x hid]
+
+        x, sent_weights = self._attn_sent(key=x, value=x, query=x,
+                                          need_weights=need_weights
+                                          )  # [sent, txt, 4 x hid]
+
+        x = x.sum(dim=0)  # [txt, 4 x hid]  TODO
+
+        x = self._fc1(x)  # [txt, hid_fc]
+
+        x = self._fc2(x)  # [text, 1]
+
+        x = sigmoid(x)  # [text, 1]
+
+        return x, words_weights, sent_weights
 
 
 def get_pretrained_embedding(vocab: Dict[str, int]) -> nn.Embedding:
@@ -28,15 +79,14 @@ def get_pretrained_embedding(vocab: Dict[str, int]) -> nn.Embedding:
     glove.unk_init = lambda x: torch.ones(emb_size, dtype=torch.float32)
 
     vocab_size = len(vocab) + 1  # add 1 because of padding token
-
     weights = torch.zeros((vocab_size, emb_size), dtype=torch.float32)
     for word, idx in vocab.items():
         emb = glove.get_vecs_by_tokens([word])
         weights[idx, :] = emb
 
-    embedding = nn.Embedding.from_pretrained(embeddings=weights, freeze=True)
+    embedding = nn.Embedding.from_pretrained(embeddings=weights, freeze=False)
 
-    # thus, we reserved 0-vector for padding, 1-vector for unknown tokens
+    # thus, we use 0-vector for padding, 1-vector for unknown tokens
     return embedding
 
 
@@ -46,8 +96,10 @@ def check_model() -> None:
     batch = torch.randint(low=1, high=len(vocab),
                           size=(16, 12, 10), dtype=torch.int64
                           )
-    output = model(batch)
-    print(output.shape)
+    output, _, _ = model(batch, need_weights=False)
+
+    torch.all(0 < output)
+    torch.all(1 > output)
 
 
 def check_ptratrained_embedding() -> None:
