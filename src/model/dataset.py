@@ -5,10 +5,12 @@ from typing import Tuple, List, Dict, Union
 
 import torch
 from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
-from torch import Tensor
+from torch import LongTensor
 from tqdm import tqdm
 
-__all__ = ['ImdbReviewsDataset', 'get_datasets', 'collate_docs']
+__all__ = ['ImdbReviewsDataset', 'get_datasets', 'collate_docs', 'IMBD_ROOT']
+
+IMBD_ROOT = Path(__file__).parent.parent.parent / 'data' / 'aclImdb'
 
 TText = List[List[int]]  # text[i_sentece][j_word]
 TTextStr = List[List[str]]  # text[i_sentece][j_word]
@@ -48,7 +50,7 @@ class ImdbReviewsDataset:
     def __len__(self) -> int:
         return len(self._texts)
 
-    @lru_cache(maxsize=50_000)  # equal to amount if reviews
+    @lru_cache(maxsize=50_000)  # equal to number of reviews in imdb
     def __getitem__(self, i: int) -> TItem:
         return {
             'txt': self._texts[i],
@@ -100,15 +102,19 @@ class ImdbReviewsDataset:
 
         return vocab
 
+    @property
+    def vocab(self) -> Dict[str, int]:
+        return self._vocab
 
-def collate_docs(batch: List[TItem]) -> Tuple[Tensor, Tensor]:
+
+def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, LongTensor]:
     n_docs = len(batch)  # number of documents in batch
     max_snt = max([item['snt_len'] for item in batch])
     max_txt = max([item['txt_len'] for item in batch])
 
-    labels_tensor = torch.zeros(n_docs, dtype=torch.float32)
+    labels_tensor = torch.zeros(n_docs, dtype=torch.int64)
     docs_tensor = torch.zeros((n_docs, max_txt, max_snt),
-                              dtype=torch.float32)
+                              dtype=torch.int64)
 
     for i_doc, item in enumerate(batch):
         labels_tensor[i_doc] = item['label']
@@ -120,13 +126,11 @@ def collate_docs(batch: List[TItem]) -> Tuple[Tensor, Tensor]:
     return docs_tensor, labels_tensor
 
 
-def get_datasets() -> Tuple[ImdbReviewsDataset, ImdbReviewsDataset]:
-    imdb_root = Path(__file__).parent.parent.parent / 'data' / 'aclImdb'
-
-    vocab = ImdbReviewsDataset.get_imdb_vocab(imdb_root)
-
-    train_set = ImdbReviewsDataset(imdb_root / 'train', vocab)
-    test_set = ImdbReviewsDataset(imdb_root / 'test', vocab)
+def get_datasets(imbd_root: Path = IMBD_ROOT
+                 ) -> Tuple[ImdbReviewsDataset, ImdbReviewsDataset]:
+    vocab = ImdbReviewsDataset.get_imdb_vocab(imbd_root)
+    train_set = ImdbReviewsDataset(imbd_root / 'train', vocab)
+    test_set = ImdbReviewsDataset(imbd_root / 'test', vocab)
 
     return train_set, test_set
 
