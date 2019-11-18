@@ -5,7 +5,7 @@ from typing import Tuple, List, Dict, Union
 
 import torch
 from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
-from torch import LongTensor
+from torch import LongTensor, FloatTensor
 from tqdm import tqdm
 
 __all__ = ['ImdbReviewsDataset', 'get_datasets', 'collate_docs', 'IMBD_ROOT']
@@ -63,7 +63,7 @@ class ImdbReviewsDataset:
         files_neg = list((self._path_to_data / 'neg').glob('*_*.txt'))
         files_pos = list((self._path_to_data / 'pos').glob('*_*.txt'))
 
-        for file_path in tqdm((files_pos + files_neg)[:50]):  # todo
+        for file_path in tqdm((files_pos + files_neg)[:50]):  # TODO
             text_str = self.read_review(path_to_review=file_path)
             text = [[self._vocab[w] for w in s] for s in text_str]
 
@@ -107,12 +107,12 @@ class ImdbReviewsDataset:
         return self._vocab
 
 
-def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, LongTensor]:
+def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, FloatTensor]:
     n_docs = len(batch)  # number of documents in batch
     max_snt = max([item['snt_len'] for item in batch])
     max_txt = max([item['txt_len'] for item in batch])
 
-    labels_tensor = torch.zeros(n_docs, dtype=torch.int64)
+    labels_tensor = torch.zeros((n_docs, 1), dtype=torch.float32)
     docs_tensor = torch.zeros((n_docs, max_txt, max_snt),
                               dtype=torch.int64)
 

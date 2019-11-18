@@ -6,6 +6,7 @@ from torch import nn, Tensor, LongTensor
 from torch import sigmoid
 from torch.nn.functional import cosine_similarity
 
+from src.const import VECTORS_CACHE
 from src.model.dataset import IMBD_ROOT, ImdbReviewsDataset
 
 
@@ -75,7 +76,7 @@ class HAN(nn.Module):
 
 def get_pretrained_embedding(vocab: Dict[str, int]) -> nn.Embedding:
     emb_size = 100
-    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size)
+    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size, cache=VECTORS_CACHE)
     glove.unk_init = lambda x: torch.ones(emb_size, dtype=torch.float32)
 
     vocab_size = len(vocab) + 1  # add 1 because of padding token
@@ -84,9 +85,8 @@ def get_pretrained_embedding(vocab: Dict[str, int]) -> nn.Embedding:
         emb = glove.get_vecs_by_tokens([word])
         weights[idx, :] = emb
 
+    weights[0, :] = glove.unk_init(None)
     embedding = nn.Embedding.from_pretrained(embeddings=weights, freeze=False)
-
-    # thus, we use 0-vector for padding, 1-vector for unknown tokens
     return embedding
 
 
