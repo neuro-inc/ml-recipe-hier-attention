@@ -8,12 +8,9 @@ from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
 from torch import LongTensor, FloatTensor
 from tqdm import tqdm
 
-__all__ = ['ImdbReviewsDataset', 'get_datasets', 'collate_docs', 'IMBD_ROOT']
-
-IMBD_ROOT = Path(__file__).parent.parent.parent / 'data' / 'aclImdb'
+from src.const import IMBD_ROOT
 
 TText = List[List[int]]  # text[i_sentece][j_word]
-TTextStr = List[List[str]]  # text[i_sentece][j_word]
 TItem = Dict[str, Union[TText, int]]
 
 
@@ -60,36 +57,37 @@ class ImdbReviewsDataset:
         }
 
     def _load_data(self) -> None:
-        files_neg = list((self._path_to_data / 'neg').glob('*_*.txt'))
-        files_pos = list((self._path_to_data / 'pos').glob('*_*.txt'))
+        files = list((self._path_to_data / 'neg').glob('*_*.txt')) + \
+                list((self._path_to_data / 'pos').glob('*_*.txt'))
 
-        for file_path in tqdm((files_pos + files_neg)[:50]):  # TODO
-            text_str = self.read_review(path_to_review=file_path)
-            text = [[self._vocab[w] for w in s] for s in text_str]
+        print(f'Dataset loading from {self._path_to_data}.')
+        for file_path in tqdm(files):
+            with open(file_path, 'r') as f:
+                text, snt_len_max, txt_len = self.tokenize_plane_text(f.read())
+                label = 1 if file_path.parent.name == 'pos' else 0
 
-            label = 1 if file_path.parent.name == 'pos' else 0
-            snt_len_max = max([len(snt) for snt in text])
-            txt_len = len(text)
+                self._paths.append(file_path)
+                self._texts.append(text)
+                self._labels.append(label)
+                self._snt_lens.append(snt_len_max)
+                self._txt_lens.append(txt_len)
 
-            self._paths.append(file_path)
-            self._texts.append(text)
-            self._labels.append(label)
-            self._snt_lens.append(snt_len_max)
-            self._txt_lens.append(txt_len)
-
-    def read_review(self, path_to_review: Path) -> TTextStr:
+    def tokenize_plane_text(self, text_plane: str
+                            ) -> Tuple[TText, int, int]:
         tokenize_w = self._w_tokenizer.tokenize
         tokenize_s = self._s_tokenizer.tokenize
 
-        with open(path_to_review, 'r') as f:
-            text_plane = f.read().lower()
-            text_plane = re.sub(self._html_re, ' ', text_plane)
-            text = [
-                [w for w in tokenize_w(s) if w in self._vocab.keys()]
-                for s in tokenize_s(text_plane)
-            ]
+        text_plane = text_plane.lower()
+        text_plane = re.sub(self._html_re, ' ', text_plane)
+        text = [
+            [self.vocab[w] for w in tokenize_w(s) if w in self._vocab.keys()]
+            for s in tokenize_s(text_plane)
+        ]
 
-        return text
+        snt_len_max = max([len(snt) for snt in text])
+        txt_len = len(text)
+
+        return text, snt_len_max, txt_len
 
     @staticmethod
     def get_imdb_vocab(imdb_root: Path) -> Dict[str, int]:
@@ -133,6 +131,11 @@ def get_datasets(imbd_root: Path = IMBD_ROOT
     test_set = ImdbReviewsDataset(imbd_root / 'test', vocab)
 
     return train_set, test_set
+
+
+def get_test_dataset(imbd_root: Path = IMBD_ROOT) -> ImdbReviewsDataset:
+    vocab = ImdbReviewsDataset.get_imdb_vocab(imbd_root)
+    return ImdbReviewsDataset(imbd_root / 'test', vocab)
 
 
 def check_dataset() -> None:

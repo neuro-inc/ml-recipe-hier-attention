@@ -8,7 +8,7 @@ class OnlineAvg:
     _avg: float
     _n: int
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._avg = 0
         self._n = 0
 
@@ -22,7 +22,7 @@ class OnlineAvg:
 
     @property
     def n(self) -> int:
-        return n
+        return self._n
 
     def __str__(self) -> str:
         return self._avg.__str__()

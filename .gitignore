@@ -1,7 +1,7 @@
 .idea/*
-data/*
-src/model/.vector_cache/*
+*.vector_cache/*
 *__pycache__*
+*.DS_Store*
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/
