@@ -5,10 +5,9 @@ import torch
 import torchtext
 from torch import nn, Tensor, LongTensor, FloatTensor
 from torch import sigmoid, tanh
-from torch.nn.functional import cosine_similarity, softmax, relu
+from torch.nn.functional import softmax, relu
 
-from src.const import VECTORS_CACHE, IMBD_ROOT
-from src.dataset import ImdbReviewsDataset
+from src.const import VECTORS_CACHE
 
 
 class HAN(nn.Module):
@@ -140,40 +139,3 @@ def get_pretrained_embedding(vocab: Dict[str, int],
     embedding = nn.Embedding.from_pretrained(embeddings=weights,
                                              freeze=freeze_emb)
     return embedding
-
-
-def check_model() -> None:
-    vocab = {'cat': 1, 'dog': 2, 'bird': 3}  # 0 reserved for padding
-    model = HAN(vocab=vocab, freeze_emb=True)
-    batch = torch.randint(low=1, high=len(vocab),
-                          size=(16, 12, 10), dtype=torch.int64
-                          )
-    output, _, _ = model(batch)
-
-    torch.all(0 < output)
-    torch.all(1 > output)
-
-
-def check_pretrained_embedding() -> None:
-    vocab = ImdbReviewsDataset.get_imdb_vocab(IMBD_ROOT)
-    embedding = get_pretrained_embedding(vocab=vocab, freeze_emb=True)
-
-    def word2emb(w: str) -> torch.LongTensor:
-        ind_in_vocab = torch.tensor(vocab[w], dtype=torch.int64)
-        emb = embedding(ind_in_vocab)
-        return emb
-
-    def similarity(w1: str, w2: str) -> torch.FloatTensor:
-        emb1, emb2 = word2emb(w1), word2emb(w2)
-        d = cosine_similarity(emb1, emb2, dim=0)
-        return d
-
-    s1 = similarity('green', 'blue')
-    s2 = similarity('cloud', 'table')
-
-    assert s1 > s2, (s1, s2)
-
-
-if __name__ == '__main__':
-    check_model()
-    check_pretrained_embedding()

@@ -136,20 +136,3 @@ def get_datasets(imbd_root: Path = IMBD_ROOT
 def get_test_dataset(imbd_root: Path = IMBD_ROOT) -> ImdbReviewsDataset:
     vocab = ImdbReviewsDataset.get_imdb_vocab(imbd_root)
     return ImdbReviewsDataset(imbd_root / 'test', vocab)
-
-
-def check_dataset() -> None:
-    train_set, _ = get_datasets()
-    print(train_set[0])
-
-
-def check_collate() -> None:
-    train_set, _ = get_datasets()
-    batch = [train_set[i] for i in [0, 1, 2]]
-    docs, labels = collate_docs(batch=batch)
-    print(docs.shape, labels.shape)
-
-
-if __name__ == '__main__':
-    check_dataset()
-    check_collate()
