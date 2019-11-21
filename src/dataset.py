@@ -16,9 +16,15 @@ from src.const import IMBD_ROOT
 TText = List[List[int]]  # text[i_sentece][j_word]
 TItem = Dict[str, Union[TText, int]]
 
+# params was choosen as 98% quantile:
+SNT_CLIP = 100
+TXT_CLIP = 40
+
 
 class ImdbReviewsDataset:
     _path_to_data: Path
+    _snt_clip: int
+    _txt_clip: int
     _s_tokenizer: PunktSentenceTokenizer
     _w_tokenizer: WordPunctTokenizer
     _html_re: re.Pattern  # type: ignore
@@ -31,9 +37,16 @@ class ImdbReviewsDataset:
     _snt_lens: List[int]
     _vocab: Dict[str, int]
 
-    def __init__(self, path_to_data: Path, vocab: Dict[str, int]):
+    def __init__(self,
+                 path_to_data: Path,
+                 vocab: Dict[str, int],
+                 snt_clip: int = SNT_CLIP,
+                 txt_clip: int = TXT_CLIP
+                 ):
         self._path_to_data = path_to_data
         self._vocab = vocab
+        self._snt_clip = snt_clip
+        self._txt_clip = txt_clip
 
         self._s_tokenizer = PunktSentenceTokenizer()
         self._w_tokenizer = WordPunctTokenizer()
@@ -83,9 +96,10 @@ class ImdbReviewsDataset:
         text_plane = text_plane.lower()
         text_plane = re.sub(self._html_re, ' ', text_plane)
         text = [
-            [self.vocab[w] for w in tokenize_w(s) if w in self._vocab.keys()]
-            for s in tokenize_s(text_plane)
-        ]
+                   [self.vocab[w] for w in tokenize_w(s)
+                    if w in self._vocab.keys()][:self._snt_clip]
+                   for s in tokenize_s(text_plane)
+               ][:self._txt_clip]
 
         snt_len_max = max([len(snt) for snt in text])
         txt_len = len(text)
@@ -108,7 +122,7 @@ class ImdbReviewsDataset:
         return self._vocab
 
     @property
-    def txt_lens(self) -> List[str]:
+    def txt_lens(self) -> List[int]:
         return self._txt_lens
 
 
@@ -141,7 +155,7 @@ class SimilarRandSampler(Sampler):
                  keys: List[int],
                  bs: int,
                  diversity: int = 10
-                 ) -> List[int]:
+                 ):
         super().__init__(data_source=None)
 
         assert (bs >= 1) & (diversity >= 1)

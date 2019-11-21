@@ -4,8 +4,12 @@ from collections import Counter
 import torch
 from torch.nn.functional import cosine_similarity
 
-from src.const import IMBD_ROOT
-from src.dataset import ImdbReviewsDataset, get_test_dataset, collate_docs, SimilarRandSampler
+from src.const import IMBD_ROOT, LOG_DIR
+from src.dataset import (
+    ImdbReviewsDataset, get_test_dataset,
+    collate_docs, SimilarRandSampler,
+    TXT_CLIP, SNT_CLIP
+)
 from src.model import HAN, get_pretrained_embedding
 
 
@@ -75,3 +79,14 @@ def test_sampler() -> None:
 
         assert set(sampled_ids_flat) == set(list(range(n_txt)))
         assert Counter(sampled_lens) == Counter(lens)
+
+
+def test_batch_size() -> None:
+    bs = 512
+
+    model = HAN.from_imbd_ckpt(LOG_DIR / 'best.ckpt')
+    model.cuda()
+
+    batch = torch.ones((bs, TXT_CLIP, SNT_CLIP),
+                       dtype=torch.int64).cuda()
+    model(batch)
