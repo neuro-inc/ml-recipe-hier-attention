@@ -14,7 +14,7 @@ This project is designed to run on [Neuro Platform](https://neu.ro), so you can 
 | Local directory                      | Description       | Storage URI                                                                  | Environment mounting point |
 |:------------------------------------ |:----------------- |:---------------------------------------------------------------------------- |:-------------------------- | 
 | `data/`                              | Data              | `storage:ml-recipe-hier-attention/data/`                              | `/ml-recipe-hier-attention/data/` | 
-| `code/` | Python modules    | `storage:ml-recipe-hier-attention/code/` | `/ml-recipe-hier-attention/code/` |
+| `src/` | Python modules    | `storage:ml-recipe-hier-attention/src/` | `/ml-recipe-hier-attention/src/` |
 | `notebooks/`                         | Jupyter notebooks | `storage:ml-recipe-hier-attention/notebooks/`                         | `/ml-recipe-hier-attention/notebooks/` |
 | No directory                         | Logs and results  | `storage:ml-recipe-hier-attention/results/`                           | `/ml-recipe-hier-attention/results/` |
 
@@ -36,7 +36,7 @@ Follow the instructions below to set up the environment and start Jupyter develo
 
 `make jupyter`
 
-* The content of `code` and `notebooks` directories is uploaded to the platform storage.
+* The content of `src` and `notebooks` directories is uploaded to the platform storage.
 * A job with Jupyter is started, and its web interface is opened in the local web browser window.
 
 ### Kill Jupyter

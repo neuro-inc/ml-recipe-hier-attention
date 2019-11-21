@@ -1,11 +1,14 @@
+import random
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Tuple, List, Dict, Union
+from typing import Tuple, List, Dict, Union, Iterator
 
+import numpy as np
 import torch
 from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
 from torch import LongTensor, FloatTensor
+from torch.utils.data import Sampler
 from tqdm import tqdm
 
 from src.const import IMBD_ROOT
@@ -104,12 +107,16 @@ class ImdbReviewsDataset:
     def vocab(self) -> Dict[str, int]:
         return self._vocab
 
+    @property
+    def txt_lens(self) -> List[str]:
+        return self._txt_lens
+
 
 def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, FloatTensor]:
-    n_docs = len(batch)  # number of documents in batch
     max_snt = max([item['snt_len'] for item in batch])
     max_txt = max([item['txt_len'] for item in batch])
 
+    n_docs = len(batch)  # number of documents in batch
     labels_tensor = torch.zeros((n_docs, 1), dtype=torch.float32)
     docs_tensor = torch.zeros((n_docs, max_txt, max_snt),
                               dtype=torch.int64)
@@ -122,6 +129,47 @@ def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, FloatTensor]:
             docs_tensor[i_doc, i_snt, 0:snt_len] = torch.tensor(snt)
 
     return docs_tensor, labels_tensor
+
+
+class SimilarRandSampler(Sampler):
+    _ids: List[int]
+    _bs: int
+    _k: int
+    _len: int
+
+    def __init__(self,
+                 keys: List[int],
+                 bs: int,
+                 diversity: int = 10
+                 ) -> List[int]:
+        super().__init__(data_source=None)
+
+        assert (bs >= 1) & (diversity >= 1)
+
+        self._ids = np.argsort(keys.copy()).tolist()
+        self._bs = bs
+        self._k = diversity
+
+        self._len = int(np.ceil(len(self._ids) / self._bs))
+
+    def __iter__(self) -> Iterator[int]:
+        similar_key_batches = []
+        while self._ids:
+            idx = random.choice(range(len(self._ids)))
+            lb = max(0, idx - self._k * self._bs)
+            rb = min(len(self._ids), idx + self._k * self._bs)
+
+            batch = random.sample(self._ids[lb: rb], min(self._bs, rb - lb))
+
+            # rm ids from current batch from our pull
+            self._ids = [e for e in self._ids if e not in batch]
+
+            similar_key_batches.extend(batch)
+
+        return iter(similar_key_batches)
+
+    def __len__(self) -> int:
+        return self._len
 
 
 def get_datasets(imbd_root: Path = IMBD_ROOT

@@ -1,8 +1,11 @@
+import random
+from collections import Counter
+
 import torch
 from torch.nn.functional import cosine_similarity
 
 from src.const import IMBD_ROOT
-from src.dataset import ImdbReviewsDataset, get_test_dataset, collate_docs
+from src.dataset import ImdbReviewsDataset, get_test_dataset, collate_docs, SimilarRandSampler
 from src.model import HAN, get_pretrained_embedding
 
 
@@ -54,3 +57,21 @@ def test_forward_for_dataset() -> None:
     assert pred.numel() == n_doc
     assert w_scores.shape == docs.shape
     assert s_scores.shape == (n_doc, n_snt)
+
+
+def test_sampler() -> None:
+    for _ in range(20):
+        max_len = random.randint(1, 20)
+        n_txt = random.randint(1, 100)
+        bs = random.randint(4, 8)
+        diversity = random.randint(1, 2)
+
+        lens = [random.randint(1, max_len) for _ in range(n_txt)]
+
+        sampler = SimilarRandSampler(keys=lens, bs=bs, diversity=diversity)
+
+        sampled_ids_flat = list(sampler)
+        sampled_lens = [lens[i] for i in sampled_ids_flat]
+
+        assert set(sampled_ids_flat) == set(list(range(n_txt)))
+        assert Counter(sampled_lens) == Counter(lens)

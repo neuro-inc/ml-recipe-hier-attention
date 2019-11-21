@@ -1,7 +1,7 @@
 ##### PATHS #####
 
 DATA_DIR?=data
-CODE_DIR?=code
+CODE_DIR?=src
 NOTEBOOKS_DIR?=notebooks
 RESULTS_DIR?=results
 

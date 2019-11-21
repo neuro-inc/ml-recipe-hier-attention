@@ -7,7 +7,11 @@ from torch.optim import SGD, Optimizer
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.dataset import ImdbReviewsDataset, collate_docs
+from src.dataset import \
+    (ImdbReviewsDataset,
+     collate_docs,
+     SimilarRandSampler
+     )
 from src.utils import OnlineAvg
 
 
@@ -55,23 +59,24 @@ class ImdbTrainer:
         if mode == mode.TRAIN:
             grad_context = autograd.enable_grad
             dataset = self._train_set
-            shuffle = True
             self._model.train()
 
         elif mode == mode.TEST:
             grad_context = autograd.no_grad
             dataset = self._test_set
-            shuffle = False
             self._model.eval()
 
         else:
             raise ValueError(f'Unexpected mode: {mode}.')
 
-        loader_tqdm = tqdm(DataLoader(
-            dataset=dataset, batch_size=self._batch_size,
-            collate_fn=collate_docs, num_workers=4,
-            shuffle=shuffle)
-        )
+        sampler = SimilarRandSampler(keys=dataset.txt_lens,
+                                     bs=self._batch_size)
+        loader_tqdm = tqdm(DataLoader(dataset=dataset, num_workers=4,
+                                      batch_size=self._batch_size,
+                                      collate_fn=collate_docs,
+                                      sampler=sampler),
+                           total=len(sampler))
+
         avg_accuracy = OnlineAvg()
         avg_loss = OnlineAvg()
 
@@ -102,7 +107,9 @@ class ImdbTrainer:
     def train(self, n_epoch: int) -> None:
         best_metric = - 1.0
 
-        for i in range(n_epoch):
+        for i_epoch in range(n_epoch):
+
+            print(f'Epoch: {i_epoch} / {n_epoch - 1}.')
             self._loop(mode=Mode.TRAIN)
 
             metric = self._loop(mode=Mode.TEST)

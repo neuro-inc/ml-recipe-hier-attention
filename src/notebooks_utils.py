@@ -22,7 +22,7 @@ def display_predict(model: nn.Module,
     sign = 1 if bool(pred > .5) else -1
     document = document.cpu()
 
-    pred_str = 'positive' if sign else 'negative'
+    pred_str = 'positive' if sign == 1 else 'negative'
     print(f'Predict: {pred_str} (confedence: {round(conf, 3)})')
 
     if gt is not None:

@@ -27,7 +27,7 @@ def get_parser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument('--n_epoch', type=int, default=500)
     parser.add_argument('--freeze_emb', type=bool, default=False)
-    parser.add_argument('--batch_size', type=int, default=6)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--device', type=device, default='cuda:0')
     return parser
