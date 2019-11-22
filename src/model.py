@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict
 
 import torch
 import torchtext
-from torch import nn, Tensor, LongTensor, FloatTensor
+from torch import nn, LongTensor, FloatTensor
 from torch import sigmoid, tanh
 from torch.nn.functional import softmax, relu
 
@@ -43,9 +43,7 @@ class HAN(nn.Module):
             'hid': hid, 'hid_fc': hid_fc
         }
 
-    def forward(self,
-                x: LongTensor,
-                ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
+    def forward(self, x: LongTensor) -> Dict[str, FloatTensor]:
         txt, snt, word = x.shape
 
         # 1. Words level
@@ -76,7 +74,7 @@ class HAN(nn.Module):
 
         x = sigmoid(x)  # [text, 1]
 
-        return x, w_scores, s_scores
+        return {'logits': x, 'w_scores': w_scores, 's_scores': s_scores}
 
     def save(self, path_to_save: Path) -> None:
         checkpoint = {

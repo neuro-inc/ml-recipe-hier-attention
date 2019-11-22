@@ -7,11 +7,6 @@ from torch.optim import SGD, Optimizer
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.dataset import \
-    (ImdbReviewsDataset,
-     collate_docs,
-     SimilarRandSampler
-     )
 from src.utils import OnlineAvg
 
 
@@ -26,9 +21,8 @@ class Mode(Enum):
 
 class ImdbTrainer:
     _model: nn.Module
-    _train_set: ImdbReviewsDataset
-    _test_set: ImdbReviewsDataset
-    _batch_size: int
+    _train_loader: DataLoader
+    _test_loader: DataLoader
     _device: torch.device
     _ckpt_dir: Path
 
@@ -37,20 +31,18 @@ class ImdbTrainer:
 
     def __init__(self,
                  model: nn.Module,
-                 train_set: ImdbReviewsDataset,
-                 test_set: ImdbReviewsDataset,
-                 batch_size: int,
+                 train_loader: DataLoader,
+                 test_loader: DataLoader,
                  device: torch.device,
                  ckpt_dir: Path,
                  ):
         self._model = model
-        self._train_set = train_set
-        self._test_set = test_set
-        self._batch_size = batch_size
+        self._train_loader = train_loader
+        self._test_loader = test_loader
         self._device = device
         self._ckpt_dir = ckpt_dir
 
-        self._optim = SGD(self._model.parameters(), lr=1e-3, momentum=.9)
+        self._optim = SGD(self._model.parameters(), lr=.5 * 1e-2, momentum=.9)
         self._criterion = nn.BCELoss()
 
         self._model.to(self._device)
@@ -58,31 +50,26 @@ class ImdbTrainer:
     def _loop(self, mode: Mode) -> float:
         if mode == mode.TRAIN:
             grad_context = autograd.enable_grad
-            dataset = self._train_set
+            loader = self._train_loader
             self._model.train()
 
         elif mode == mode.TEST:
             grad_context = autograd.no_grad
-            dataset = self._test_set
+            loader = self._test_loader
             self._model.eval()
 
         else:
             raise ValueError(f'Unexpected mode: {mode}.')
 
-        sampler = SimilarRandSampler(keys=dataset.txt_lens,
-                                     bs=self._batch_size)
-        loader_tqdm = tqdm(DataLoader(dataset=dataset, num_workers=4,
-                                      batch_size=self._batch_size,
-                                      collate_fn=collate_docs,
-                                      sampler=sampler),
-                           total=len(sampler))
+        loader_tqdm = tqdm(loader, total=len(loader.sampler))
 
         avg_accuracy = OnlineAvg()
         avg_loss = OnlineAvg()
 
         with grad_context():
-            for docs, labels in loader_tqdm:
-                pred, _, _ = self._model(x=docs.to(self._device))
+            for batch in loader_tqdm:
+                docs, labels = batch['features'], batch['targets']
+                pred = self._model(x=docs.to(self._device))['logits']
                 loss = self._criterion(target=labels.to(self._device),
                                        input=pred)
 

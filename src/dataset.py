@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
 from torch import LongTensor, FloatTensor
-from torch.utils.data import Sampler
+from torch.utils.data import Sampler, DataLoader
 from tqdm import tqdm
 
 from src.const import IMBD_ROOT
@@ -76,6 +76,8 @@ class ImdbReviewsDataset:
         files = list((self._path_to_data / 'neg').glob('*_*.txt')) + \
                 list((self._path_to_data / 'pos').glob('*_*.txt'))
 
+        # files = files[:200]  # todo
+
         print(f'Dataset loading from {self._path_to_data}.')
         for file_path in tqdm(files):
             with open(file_path, 'r') as f:
@@ -95,11 +97,9 @@ class ImdbReviewsDataset:
 
         text_plane = text_plane.lower()
         text_plane = re.sub(self._html_re, ' ', text_plane)
-        text = [
-                   [self.vocab[w] for w in tokenize_w(s)
-                    if w in self._vocab.keys()][:self._snt_clip]
-                   for s in tokenize_s(text_plane)
-               ][:self._txt_clip]
+        text = [[self.vocab[w] for w in tokenize_w(s)
+                 if w in self._vocab.keys()][:self._snt_clip]
+                for s in tokenize_s(text_plane)][:self._txt_clip]
 
         snt_len_max = max([len(snt) for snt in text])
         txt_len = len(text)
@@ -126,7 +126,8 @@ class ImdbReviewsDataset:
         return self._txt_lens
 
 
-def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, FloatTensor]:
+def collate_docs(batch: List[TItem]
+                 ) -> Dict[str, Union[LongTensor, FloatTensor]]:
     max_snt = max([item['snt_len'] for item in batch])
     max_txt = max([item['txt_len'] for item in batch])
 
@@ -142,7 +143,7 @@ def collate_docs(batch: List[TItem]) -> Tuple[LongTensor, FloatTensor]:
             snt_len = len(snt)
             docs_tensor[i_doc, i_snt, 0:snt_len] = torch.tensor(snt)
 
-    return docs_tensor, labels_tensor
+    return {'features': docs_tensor, 'targets': labels_tensor}
 
 
 class SimilarRandSampler(Sampler):
@@ -198,3 +199,29 @@ def get_datasets(imbd_root: Path = IMBD_ROOT
 def get_test_dataset(imbd_root: Path = IMBD_ROOT) -> ImdbReviewsDataset:
     vocab = ImdbReviewsDataset.get_imdb_vocab(imbd_root)
     return ImdbReviewsDataset(imbd_root / 'test', vocab)
+
+
+def get_loaders(batch_size: int,
+                n_workers: int = 4,
+                imbd_root: Path = IMBD_ROOT,
+                ) -> Tuple[DataLoader, DataLoader, Dict[str, int]]:
+    train_set, test_set = get_datasets(imbd_root=imbd_root)
+
+    args = {'num_workers': n_workers, 'batch_size': batch_size,
+            'collate_fn': collate_docs}
+
+    train_loader = DataLoader(
+        dataset=train_set,
+        sampler=SimilarRandSampler(keys=train_set.txt_lens,
+                                   bs=batch_size),
+        **args
+    )
+
+    test_loader = DataLoader(
+        dataset=test_set,
+        sampler=SimilarRandSampler(keys=test_set.txt_lens,
+                                   bs=batch_size),
+        **args
+    )
+
+    return train_loader, test_loader, train_loader.dataset.vocab

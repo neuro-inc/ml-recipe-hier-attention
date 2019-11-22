@@ -49,7 +49,7 @@ def test_forward_for_dataset() -> None:
     # data
     train_set = get_test_dataset()
     ids = [2, 5]
-    docs, labels = collate_docs([train_set[i] for i in ids])
+    docs = collate_docs([train_set[i] for i in ids])['features']
     n_doc, n_snt, n_wrd = docs.shape
 
     # model
@@ -82,7 +82,7 @@ def test_sampler() -> None:
 
 
 def test_batch_size() -> None:
-    bs = 512
+    bs = 384
 
     model = HAN.from_imbd_ckpt(LOG_DIR / 'best.ckpt')
     model.cuda()

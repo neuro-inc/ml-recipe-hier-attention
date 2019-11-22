@@ -13,11 +13,15 @@ def display_predict(model: nn.Module,
                     itow: Dict[int, str],
                     pad_idx: int = 0,
                     ) -> None:
-    document, gt = batch
+    document, gt = batch['features'], batch['targets']
 
     with torch.no_grad():
-        pred, w_score, s_score = model(document)
-        conf = 2 * abs(.5 - float(pred))
+        output = model(document)
+        pred = output['logits']
+        w_score = output['w_scores']
+        s_score = output['s_scores']
+
+    conf = 2 * abs(.5 - float(pred))
 
     sign = 1 if bool(pred > .5) else -1
     document = document.cpu()
