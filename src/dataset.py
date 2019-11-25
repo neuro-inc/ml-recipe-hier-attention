@@ -76,7 +76,7 @@ class ImdbReviewsDataset:
         files = list((self._path_to_data / 'neg').glob('*_*.txt')) + \
                 list((self._path_to_data / 'pos').glob('*_*.txt'))
 
-        # files = files[:200]  # todo
+        files = files[:200]  # todo
 
         print(f'Dataset loading from {self._path_to_data}.')
         for file_path in tqdm(files):
@@ -168,16 +168,18 @@ class SimilarRandSampler(Sampler):
         self._len = int(np.ceil(len(self._ids) / self._bs))
 
     def __iter__(self) -> Iterator[int]:
-        similar_key_batches = []
-        while self._ids:
-            idx = random.choice(range(len(self._ids)))
-            lb = max(0, idx - self._k * self._bs)
-            rb = min(len(self._ids), idx + self._k * self._bs)
+        cur_ids = self._ids.copy()
 
-            batch = random.sample(self._ids[lb: rb], min(self._bs, rb - lb))
+        similar_key_batches = []
+        while cur_ids:
+            idx = random.choice(range(len(cur_ids)))
+            lb = max(0, idx - self._k * self._bs)
+            rb = min(len(cur_ids), idx + self._k * self._bs)
+
+            batch = random.sample(cur_ids[lb: rb], min(self._bs, rb - lb))
 
             # rm ids from current batch from our pull
-            self._ids = [e for e in self._ids if e not in batch]
+            cur_ids = [e for e in cur_ids if e not in batch]
 
             similar_key_batches.extend(batch)
 

@@ -1,63 +1,72 @@
 import warnings
+from argparse import ArgumentParser, Namespace
+from collections import OrderedDict
+from pathlib import Path
 
 import torch
-from catalyst.dl import SupervisedRunner
 from catalyst.dl.callbacks import AccuracyCallback
+from catalyst.dl.runner import SupervisedWandbRunner, SupervisedRunner
+from catalyst.utils import set_global_seed
+from torch import device as tdevice
+from torch.cuda import is_available
 
-from src.const import LOG_DIR
+from src.const import LOG_DIR_CATALYST
 from src.dataset import get_loaders
 from src.model import HAN
+from src.utils import setup_wandb
 
 warnings.simplefilter('ignore')
 
 
-def main() -> None:
-    # experiment setup
-    logdir = LOG_DIR.parent / 'catalyst'
-    num_epochs = 10
+def main(args: Namespace) -> None:
+    set_global_seed(args.seed)
 
-    # data
-    train_loader, test_loader, vocab = get_loaders(batch_size=16)
+    train_loader, test_loader, vocab = get_loaders(batch_size=args.batch_size)
+    loaders = OrderedDict([('train', train_loader), ('valid', test_loader)])
 
-    loaders = {"train": train_loader, "valid": test_loader}
-
-    # model, criterion, optimizer
-    model = HAN(vocab=vocab, freeze_emb=False)
+    model = HAN(vocab=vocab, freeze_emb=args.freeze_emb)
 
     criterion = torch.nn.BCELoss()
-    optimizer = torch.optim.SGD(lr=1e-3, momentum=.9,
+    optimizer = torch.optim.SGD(lr=1e-2, momentum=.9,
                                 params=model.parameters())
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
-    # model runner
-    runner = SupervisedRunner(device=torch.device('cuda:0'),
-                              input_key='features',
-                              output_key=None,
-                              input_target_key='targets'
-                              )
+    if setup_wandb():
+        Runner = SupervisedWandbRunner
+        extra_args = {'monitoring_params': {'project': 'neuro_imdb'}}
+    else:
+        Runner = SupervisedRunner
+        extra_args = {}
 
-    # model training
+    runner = Runner(input_key='features', output_key=None,
+                    input_target_key='targets',
+                    device=args.device if is_available() else tdevice('cpu')
+                    )
+
     runner.train(
-        model=model,
-        criterion=criterion,
-        optimizer=optimizer,
-        scheduler=scheduler,
-        loaders=loaders,
-        logdir=logdir,
-        num_epochs=num_epochs,
-        verbose=True,
-        minimize_metric=False,
-        main_metric='accuracy01',
+        model=model, criterion=criterion, optimizer=optimizer,
+        scheduler=scheduler, loaders=loaders, logdir=args.logdir,
+        num_epochs=args.n_epoch, verbose=True, main_metric='accuracy01',
+        valid_loader='valid',
         callbacks=[
-            AccuracyCallback(prefix='accuracy',
-                             accuracy_args=[1],
-                             input_key='targets',
-                             output_key='logits',
-                             threshold=.5,
-                             num_classes=1
-                             )
-        ]
+            AccuracyCallback(prefix='accuracy', input_key='targets',
+                             output_key='logits', accuracy_args=[1],
+                             threshold=.5, num_classes=1, activation=None)
+        ],
+        **extra_args
     )
 
 
-main()
+def get_parser() -> ArgumentParser:
+    parser = ArgumentParser()
+    parser.add_argument('--n_epoch', type=int, default=500)
+    parser.add_argument('--freeze_emb', type=bool, default=False)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--device', type=tdevice, default='cuda:0')
+    parser.add_argument('--logdir', type=Path, default=LOG_DIR_CATALYST)
+    return parser
+
+
+if __name__ == '__main__':
+    main(args=get_parser().parse_args())

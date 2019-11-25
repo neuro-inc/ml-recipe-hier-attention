@@ -19,10 +19,10 @@ def test_model() -> None:
     batch = torch.randint(low=1, high=len(vocab),
                           size=(16, 12, 10), dtype=torch.int64
                           )
-    output, _, _ = model(batch)
+    logits = model(batch)['logits']
 
-    assert torch.all(0 <= output)
-    assert torch.all(1 >= output)
+    assert torch.all(0 <= logits)
+    assert torch.all(1 >= logits)
 
 
 def test_pretrained_emb() -> None:
@@ -47,16 +47,19 @@ def test_pretrained_emb() -> None:
 
 def test_forward_for_dataset() -> None:
     # data
-    train_set = get_test_dataset()
+    dataset = get_test_dataset()
     ids = [2, 5]
-    docs = collate_docs([train_set[i] for i in ids])['features']
+    docs = collate_docs([dataset[i] for i in ids])['features']
     n_doc, n_snt, n_wrd = docs.shape
 
     # model
-    model = HAN(vocab=train_set.vocab, freeze_emb=True)
+    model = HAN(vocab=dataset.vocab, freeze_emb=True)
 
     # forwad
-    pred, w_scores, s_scores = model(docs)
+    output = model(docs)
+    pred = output['logits']
+    w_scores = output['w_scores']
+    s_scores = output['s_scores']
 
     assert pred.numel() == n_doc
     assert w_scores.shape == docs.shape

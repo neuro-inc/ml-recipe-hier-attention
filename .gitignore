@@ -2,6 +2,7 @@
 *.vector_cache/*
 *__pycache__*
 *.DS_Store*
+*wandb_token.txt*
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/

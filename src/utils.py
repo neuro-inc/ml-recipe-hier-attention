@@ -1,7 +1,10 @@
+import os
 import random
 
 import numpy as np
 import torch
+
+from src.const import WANDB_TOKEN_FILE
 
 
 class OnlineAvg:
@@ -34,3 +37,21 @@ def fix_seed(seed: int = 0) -> None:
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+
+def rround(x: float) -> float:
+    return round(x, 3)
+
+
+def setup_wandb() -> bool:
+    with open(WANDB_TOKEN_FILE, 'r') as f:
+        token = f.readline()
+
+    os.environ['WANDB_API_KEY'] = token
+
+    is_wandb = token != ' '
+    if not is_wandb:
+        print(f'W&B not available because empty token. '
+              f'You should paste it into {WANDB_TOKEN_FILE}')
+
+    return is_wandb

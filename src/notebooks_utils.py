@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,10 +9,11 @@ from torch import nn
 
 
 def display_predict(model: nn.Module,
-                    batch: Tuple[LongTensor, FloatTensor],
+                    batch: Dict[str, Union[FloatTensor, LongTensor]],
                     itow: Dict[int, str],
                     pad_idx: int = 0,
                     ) -> None:
+    model.eval()
     document, gt = batch['features'], batch['targets']
 
     with torch.no_grad():
