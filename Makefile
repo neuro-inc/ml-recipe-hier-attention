@@ -16,6 +16,7 @@ PROJECT_PATH_ENV?=/ml-recipe-hier-attention
 PROJECT_POSTFIX?=ml-recipe-hier-attention
 
 SETUP_JOB?=setup-$(PROJECT_POSTFIX)
+DOWNLOAD_JOB?=download-$(PROJECT_POSTFIX)
 TRAINING_JOB?=training-$(PROJECT_POSTFIX)
 JUPYTER_JOB?=jupyter-$(PROJECT_POSTFIX)
 TENSORBOARD_JOB?=tensorboard-$(PROJECT_POSTFIX)
@@ -79,7 +80,7 @@ setup: ### Setup remote environment
 .PHONY: download-data-to-storage
 download-data-to-storage: upload-code
 	$(NEURO) run \
-	    --name $(SETUP_JOB) \
+	    --name $(DOWNLOAD_JOB) \
 	    --preset cpu-large \
 	    --volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
