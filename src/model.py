@@ -128,7 +128,7 @@ def get_pretrained_embedding(vocab: Dict[str, int],
                              freeze_emb: bool
                              ) -> nn.Embedding:
     emb_size = 100
-    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size)  # , cache=VECTORS_CACHE)
+    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size, cache=VECTORS_CACHE)
     glove.unk_init = lambda x: torch.ones(emb_size, dtype=torch.float32)
 
     vocab_size = len(vocab) + 1  # add 1 because of padding token

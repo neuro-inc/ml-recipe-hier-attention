@@ -4,7 +4,7 @@ from collections import Counter
 import torch
 from torch.nn.functional import cosine_similarity
 
-from src.const import IMBD_ROOT, LOG_DIR
+from src.const import IMBD_ROOT
 from src.dataset import (
     ImdbReviewsDataset, get_test_dataset,
     collate_docs, SimilarRandSampler,
@@ -87,7 +87,8 @@ def test_sampler() -> None:
 def test_batch_size() -> None:
     bs = 384
 
-    model = HAN.from_imbd_ckpt(LOG_DIR / 'best.ckpt')
+    vocab = ImdbReviewsDataset.get_imdb_vocab(IMBD_ROOT)
+    model = HAN(vocab=vocab, freeze_emb=True)
     model.cuda()
 
     batch = torch.ones((bs, TXT_CLIP, SNT_CLIP),

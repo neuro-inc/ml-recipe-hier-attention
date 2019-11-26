@@ -115,7 +115,7 @@ clean-notebooks:  ### Delete notebooks directory from the platform storage
 	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR)
 
 .PHONY: upload  ### Upload code, data, and notebooks directories to the platform storage
-upload: upload-code upload-data upload-notebooks
+upload: upload-code upload-notebooks
 
 .PHONY: clean  ### Delete code, data, and notebooks directories from the platform storage
 clean: clean-code clean-data clean-notebooks clean-results

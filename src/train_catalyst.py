@@ -47,8 +47,8 @@ def main(args: Namespace) -> None:
         clb.AccuracyCallback(prefix='accuracy', input_key='targets',
                              output_key='logits', accuracy_args=[1],
                              threshold=.5, num_classes=1, activation=None),
-        clb.EarlyStoppingCallback(patience=5, metric='accuracy01', minimize=False,
-                                  min_delta=0.02)
+        clb.EarlyStoppingCallback(patience=5, minimize=False,
+                                  min_delta=0.02, metric='accuracy01')
     ]
     runner.train(
         model=model, criterion=criterion, optimizer=optimizer,
