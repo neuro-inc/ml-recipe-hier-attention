@@ -40,7 +40,7 @@ TRAINING_MACHINE_TYPE?=gpu-small
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
 # TRAINING_COMMAND="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train.py --data $(DATA_DIR)'"
-TRAINING_COMMAND?='python src/train.catalyst.py'
+TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train_catalyst.py'"
 
 ##### COMMANDS #####
 
@@ -76,6 +76,16 @@ setup: ### Setup remote environment
 
 ##### STORAGE #####
 
+.PHONY: download-data-to-storage
+download-data-to-storage: upload-code
+	$(NEURO) run \
+	    --name $(SETUP_JOB) \
+	    --preset cpu-large \
+	    --volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):rw \
+		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
+		$(BASE_ENV_NAME) \
+	    "bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh'"
+
 .PHONY: upload-code
 upload-code:  ### Upload code directory to the platform storage
 	$(NEURO) cp --recursive --update --no-target-directory $(CODE_DIR) $(PROJECT_PATH_STORAGE)/$(CODE_DIR)
@@ -84,13 +94,13 @@ upload-code:  ### Upload code directory to the platform storage
 clean-code:  ### Delete code directory from the platform storage
 	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(CODE_DIR)
 
-.PHONY: upload-data
-upload-data:  ### Upload data directory to the platform storage
-	$(NEURO) cp --recursive --update --no-target-directory $(DATA_DIR) $(DATA_DIR_STORAGE)
-
 .PHONY: clean-data
 clean-data:  ### Delete data directory from the platform storage
 	$(NEURO) rm --recursive $(DATA_DIR_STORAGE)
+
+.PHONE: clean-results
+clean-results:
+	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR)
 
 .PHONY: upload-notebooks
 upload-notebooks:  ### Upload notebooks directory to the platform storage
@@ -108,12 +118,12 @@ clean-notebooks:  ### Delete notebooks directory from the platform storage
 upload: upload-code upload-data upload-notebooks
 
 .PHONY: clean  ### Delete code, data, and notebooks directories from the platform storage
-clean: clean-code clean-data clean-notebooks
+clean: clean-code clean-data clean-notebooks clean-results
 
 ##### JOBS #####
 
 .PHONY: training
-training:  ### Run a training job
+training: upload-code  ### Run a training job
 	$(NEURO) run \
 		--name $(TRAINING_JOB) \
 		--preset $(TRAINING_MACHINE_TYPE) \
@@ -121,6 +131,7 @@ training:  ### Run a training job
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		--env EXPOSE_SSH=yes \
+		--env PYTHONPATH=$(PROJECT_PATH_ENV) \
 		$(CUSTOM_ENV_NAME) \
 		$(TRAINING_COMMAND)
 

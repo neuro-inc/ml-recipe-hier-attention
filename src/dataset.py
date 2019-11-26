@@ -27,7 +27,6 @@ class ImdbReviewsDataset:
     _txt_clip: int
     _s_tokenizer: PunktSentenceTokenizer
     _w_tokenizer: WordPunctTokenizer
-    _html_re: re.Pattern  # type: ignore
 
     # data fields
     _paths: List[Path]
@@ -194,6 +193,9 @@ def get_datasets(imbd_root: Path = IMBD_ROOT
     vocab = ImdbReviewsDataset.get_imdb_vocab(imbd_root)
     train_set = ImdbReviewsDataset(imbd_root / 'train', vocab)
     test_set = ImdbReviewsDataset(imbd_root / 'test', vocab)
+
+    print(f'Train dataset was loaded, {len(train_set)} samples.\n'
+          f'Test dataset was loaded, {len(test_set)} samples.')
 
     return train_set, test_set
 

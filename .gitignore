@@ -3,6 +3,7 @@
 *__pycache__*
 *.DS_Store*
 *wandb_token.txt*
+*results*
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/

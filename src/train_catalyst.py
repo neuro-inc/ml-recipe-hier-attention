@@ -3,8 +3,8 @@ from argparse import ArgumentParser, Namespace
 from collections import OrderedDict
 from pathlib import Path
 
+import catalyst.dl.callbacks as clb
 import torch
-from catalyst.dl.callbacks import AccuracyCallback
 from catalyst.dl.runner import SupervisedWandbRunner, SupervisedRunner
 from catalyst.utils import set_global_seed
 from torch import device as tdevice
@@ -43,16 +43,19 @@ def main(args: Namespace) -> None:
                     device=args.device if is_available() else tdevice('cpu')
                     )
 
+    callbacks = [
+        clb.AccuracyCallback(prefix='accuracy', input_key='targets',
+                             output_key='logits', accuracy_args=[1],
+                             threshold=.5, num_classes=1, activation=None),
+        clb.EarlyStoppingCallback(patience=5, metric='accuracy01', minimize=False,
+                                  min_delta=0.02)
+    ]
     runner.train(
         model=model, criterion=criterion, optimizer=optimizer,
-        scheduler=scheduler, loaders=loaders, logdir=args.logdir,
+        scheduler=scheduler, loaders=loaders, logdir=str(args.logdir),
         num_epochs=args.n_epoch, verbose=True, main_metric='accuracy01',
-        valid_loader='valid',
-        callbacks=[
-            AccuracyCallback(prefix='accuracy', input_key='targets',
-                             output_key='logits', accuracy_args=[1],
-                             threshold=.5, num_classes=1, activation=None)
-        ],
+        valid_loader='valid', callbacks=callbacks, minimize_metric=False,
+        checkpoint_data={'params': model.init_params},
         **extra_args
     )
 

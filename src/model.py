@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 import torch
 import torchtext
@@ -78,17 +78,21 @@ class HAN(nn.Module):
 
     def save(self, path_to_save: Path) -> None:
         checkpoint = {
-            'state_dict': self.state_dict(),
-            'params': self._params
+            'model_state_dict': self.state_dict(),
+            'checkpoint_data': {'params': self._params}
         }
         torch.save(checkpoint, path_to_save)
         print(f'Model saved to {path_to_save}.')
 
+    @property
+    def init_params(self) -> Dict[str, Any]:
+        return self._params
+
     @classmethod
     def from_imbd_ckpt(cls, path_to_ckpt: Path) -> 'HAN':
         ckpt = torch.load(path_to_ckpt, map_location='cpu')
-        model = cls(**ckpt['params'])
-        model.load_state_dict(ckpt['state_dict'])
+        model = cls(**ckpt['checkpoint_data']['params'])
+        model.load_state_dict(ckpt['model_state_dict'])
         print(f'Model was loaded from {path_to_ckpt}.')
         return model
 
@@ -124,7 +128,7 @@ def get_pretrained_embedding(vocab: Dict[str, int],
                              freeze_emb: bool
                              ) -> nn.Embedding:
     emb_size = 100
-    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size, cache=VECTORS_CACHE)
+    glove = torchtext.vocab.GloVe(name='6B', dim=emb_size)  # , cache=VECTORS_CACHE)
     glove.unk_init = lambda x: torch.ones(emb_size, dtype=torch.float32)
 
     vocab_size = len(vocab) + 1  # add 1 because of padding token
