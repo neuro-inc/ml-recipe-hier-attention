@@ -1,6 +1,66 @@
-# ml-recipe-hier-attention
+# Hierarchical attention for sentiment classification.
 
-# Description
+Our recipe based on highly cited paper
+[Hierarchical Attention Networks for Document Classification](https://arxiv.org/abs/1608.07775),
+(Z. Yang et al.) published in 2017. We will classify the IMDB's reviews as positive and negative
+(25k reviews for train and the same number for test). The proposed neural network architecture takes two steps:
+1. It encodes sentences. The attention mechanism predicts the importance for each **word** in the final embedding of a **sentence**.
+2. It encodes texts. This time, the attention mechanism predicts the importance for each **sentence** in the final embedding of a **text**.
+
+This architecture is interesting because we can make an illustration to understand what words and sentences were
+important for prediction. More information can be found in the original article.
+
+The architecture of Hierarchical Attention Network (HAN):
+
+![](img/scheme.png)
+
+The recipe includes two scenarios. You can train the model yourself from scratch with
+ability to make changes in data processing or architecture, it isn't tricky.
+Or/and you can play with a pretrained model: write your own review or pick the random one from 
+the test set, then visualize the model’s predictions.
+
+![](img/visualization.png)
+
+## Technologies
+* `Catalyst` as pipeline runner for deeplearning tasks.
+This new and fast developing [library](https://github.com/catalyst-team/catalyst) can significantly reduce the number of boiler code. If you are
+familiar with the Tensorflow ecosystem, you can think about it as a Keras for pytorch. This framework
+integrated with We
+* `Pytorch` and `Torchtext` as main frameworks for deeplearning stuff. `NLTK` for data preprocessing.
+
+
+## Running commands
+
+### 0. Setup.
+
+* `make setup` - before we start doing something, we have to run command, which prepare a docker container with all the necessary dependencies.
+
+* `make download-data-to-storage` - download dataset to storage.
+
+### 1. Training from stratch.
+
+* `make training` - runs the job on Neuro platform with training pipeline which includes logging via **Tensorboard** and **W&B**.
+    * If you want to use W&B for logging, please, setup enironment variable before running training command:
+     `export WANDB_API_KEY=YOUR_TOKEN`. Then a new project with name `neuro_imdb` will appear in the list of your projects in W&B's Web UI.
+    * Note. First run requires more time than next one, since it is necessary to download pretrained word embeddings for Glove and warm up the computing resources.
+
+* `make tensorboard` -  runs the job with tensorboard for monitoring training progress (losses, metrics, computational time and so on).
+
+* `make filebrowser` - runs the job that allows you to conveniently view your files on the storage in yoyr browser.
+
+### 2. Running the notebook.
+
+* `make jupyter` - run job with jupyter. If you skipped training step, you can download our pretrained model from notebook.
+
+
+
+<br/><br/>
+<br/><br/>
+<br/><br/>
+<br/><br/>
+<br/><br/>
+
+# Autogenrated description:
 
 This project is created from 
 [Neuro Platform Project Template](https://github.com/neuromation/cookiecutter-neuro-project).

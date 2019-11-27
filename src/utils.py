@@ -4,8 +4,6 @@ import random
 import numpy as np
 import torch
 
-from src.const import WANDB_TOKEN_FILE
-
 
 class OnlineAvg:
     _avg: float
@@ -44,14 +42,12 @@ def rround(x: float) -> float:
 
 
 def setup_wandb() -> bool:
-    with open(WANDB_TOKEN_FILE, 'r') as f:
-        token = f.readline()
+    token = os.getenv('WANDB_API_KEY', '')
 
-    os.environ['WANDB_API_KEY'] = token
-
-    is_wandb = token != ' '
-    if not is_wandb:
-        print(f'W&B not available because empty token. '
-              f'You should paste it into {WANDB_TOKEN_FILE}')
+    is_wandb = token != ''
+    if is_wandb:
+        print(f'WANDB_API_KEY has been read.')
+    else:
+        print(f'W&B not available because WANDB_API_KEY has not been set.')
 
     return is_wandb

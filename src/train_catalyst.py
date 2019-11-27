@@ -10,7 +10,7 @@ from catalyst.utils import set_global_seed
 from torch import device as tdevice
 from torch.cuda import is_available
 
-from src.const import LOG_DIR_CATALYST
+from src.const import LOG_DIR
 from src.dataset import get_loaders
 from src.model import HAN
 from src.utils import setup_wandb
@@ -20,6 +20,7 @@ warnings.simplefilter('ignore')
 
 def main(args: Namespace) -> None:
     set_global_seed(args.seed)
+    is_wandb = setup_wandb()
 
     train_loader, test_loader, vocab = get_loaders(batch_size=args.batch_size)
     loaders = OrderedDict([('train', train_loader), ('valid', test_loader)])
@@ -31,7 +32,7 @@ def main(args: Namespace) -> None:
                                 params=model.parameters())
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
-    if setup_wandb():
+    if is_wandb:
         Runner = SupervisedWandbRunner
         extra_args = {'monitoring_params': {'project': 'neuro_imdb'}}
     else:
@@ -67,7 +68,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--device', type=tdevice, default='cuda:0')
-    parser.add_argument('--logdir', type=Path, default=LOG_DIR_CATALYST)
+    parser.add_argument('--logdir', type=Path, default=LOG_DIR)
     return parser
 
 

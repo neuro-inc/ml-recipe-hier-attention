@@ -1,10 +1,9 @@
 from pathlib import Path
 
-DATA_PATH = Path(__file__).parent.parent / 'data'
+ROOT_PATH = Path(__file__).parent.parent
+DATA_PATH = ROOT_PATH / 'data'
+RESULT_DIR = ROOT_PATH / 'results'
 
-VECTORS_CACHE = DATA_PATH / '.vector_cache'
+VECTORS_CACHE = RESULT_DIR / '.vector_cache'
 IMBD_ROOT = DATA_PATH / 'aclImdb'
-LOG_DIR = DATA_PATH.parent / 'results' / 'logs'
-LOG_DIR_CATALYST = DATA_PATH.parent / 'results' / 'catalyst_logs'
-
-WANDB_TOKEN_FILE = Path(__file__).parent / 'wandb_token.txt'
+LOG_DIR = RESULT_DIR / 'logs'

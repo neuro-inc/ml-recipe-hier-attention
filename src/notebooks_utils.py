@@ -24,10 +24,7 @@ def display_predict(model: nn.Module,
 
     conf = 2 * abs(.5 - float(pred))
 
-    sign = 1 if bool(pred > .5) else -1
-    document = document.cpu()
-
-    pred_str = 'positive' if sign == 1 else 'negative'
+    pred_str = 'positive' if bool(pred > .5) else 'negative'
     print(f'Predict: {pred_str} (confedence: {round(conf, 3)})')
 
     if gt is not None:
@@ -40,10 +37,10 @@ def display_predict(model: nn.Module,
 
         # word level scores
         sent_str = [(itow[int(word)], float(score)) for word, score in
-                    zip(sent[mask], sign * w_score[0, i_sent, mask])]
+                    zip(sent[mask], w_score[0, i_sent, mask])]
 
         # sentence level score
-        sent_score = float(sign * s_score[0, i_sent])
+        sent_score = float(s_score[0, i_sent])
         sent_str.insert(0, (f'Sent {i_sent + 1} | ', sent_score))
 
         display_weighted_sent(sent_str)

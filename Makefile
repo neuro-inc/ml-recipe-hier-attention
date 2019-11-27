@@ -20,6 +20,7 @@ TRAINING_JOB?=training-$(PROJECT_POSTFIX)
 JUPYTER_JOB?=jupyter-$(PROJECT_POSTFIX)
 TENSORBOARD_JOB?=tensorboard-$(PROJECT_POSTFIX)
 FILEBROWSER_JOB?=filebrowser-$(PROJECT_POSTFIX)
+DOWNLOADING_JOB?=downloading-$(PROJECT_POSTFIX)
 
 ##### ENVIRONMENTS #####
 
@@ -40,7 +41,7 @@ TRAINING_MACHINE_TYPE?=gpu-small
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
 # TRAINING_COMMAND="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train.py --data $(DATA_DIR)'"
-TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train_catalyst.py'"
+TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && python -u train_catalyst.py'"
 
 ##### COMMANDS #####
 
@@ -79,8 +80,8 @@ setup: ### Setup remote environment
 .PHONY: download-data-to-storage
 download-data-to-storage: upload-code
 	$(NEURO) run \
-	    --name $(SETUP_JOB) \
-	    --preset cpu-large \
+	    --name $(DOWNLOADING_JOB) \
+	    --preset cpu-small \
 	    --volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
 		$(BASE_ENV_NAME) \
@@ -132,6 +133,7 @@ training: upload-code  ### Run a training job
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		--env EXPOSE_SSH=yes \
 		--env PYTHONPATH=$(PROJECT_PATH_ENV) \
+		--env WANDB_API_KEY \
 		$(CUSTOM_ENV_NAME) \
 		$(TRAINING_COMMAND)
 
