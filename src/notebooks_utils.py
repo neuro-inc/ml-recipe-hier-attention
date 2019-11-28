@@ -41,7 +41,7 @@ def display_predict(model: nn.Module,
 
         # sentence level score
         sent_score = float(s_score[0, i_sent])
-        sent_str.insert(0, (f'Sent {i_sent + 1} | ', sent_score))
+        sent_str.insert(0, (f'Sent #{i_sent + 1} | ', sent_score))
 
         display_weighted_sent(sent_str)
 
@@ -57,8 +57,9 @@ def display_weighted_sent(weighted_words: List[Tuple[str, float]]) -> None:
         rgba = cmap(1. / (1 + np.exp(weight)), bytes=True)
         return hex_str % rgba[:3]
 
+    vis_coeff = 2
     tokens_html = [
-        token_str.format(token=t, color_hex=color_hex(w))
+        token_str.format(token=t, color_hex=color_hex(vis_coeff * w))
         for t, w in weighted_words
     ]
 

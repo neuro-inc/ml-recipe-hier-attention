@@ -14,9 +14,9 @@ The architecture of Hierarchical Attention Network (HAN):
 
 ![](img/scheme.png)
 
-The recipe includes two scenarios. You can train the model yourself from scratch with
+The recipe includes two scenarios. You can **train the model** yourself from scratch with
 ability to make changes in data processing or architecture, it isn't tricky.
-Or/and you can play with a pretrained model: write your own review or pick the random one from 
+Or/and you can **play with a trained model** in jupyter notebook: write your own review or pick the random one from 
 the test set, then visualize the model’s predictions.
 
 ![](img/visualization.png)
@@ -54,8 +54,6 @@ integrated with We
 
 
 
-<br/><br/>
-<br/><br/>
 <br/><br/>
 <br/><br/>
 <br/><br/>

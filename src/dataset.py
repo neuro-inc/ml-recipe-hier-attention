@@ -9,7 +9,7 @@ import torch
 from nltk.tokenize import PunktSentenceTokenizer, WordPunctTokenizer
 from torch import LongTensor, FloatTensor
 from torch.utils.data import Sampler, DataLoader
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from src.const import IMBD_ROOT
 

@@ -16,12 +16,18 @@ class HAN(nn.Module):
                  vocab: Dict[str, int],
                  freeze_emb: bool,
                  hid: int = 50,
-                 hid_fc: int = 50
+                 hid_fc: int = 50,
+                 load_glove: bool = True
                  ):
         super().__init__()
 
-        self._embedding = get_pretrained_embedding(vocab, freeze_emb)
-        emb_size = self._embedding.weight.shape[1]
+        emb_size = 100
+        if load_glove:
+            self._embedding = get_pretrained_embedding(
+                freeze_emb=freeze_emb, vocab=vocab, emb_size=emb_size)
+        else:
+            self._embedding = nn.Embedding(num_embeddings=len(vocab) + 1,
+                                           embedding_dim=emb_size)
 
         # 1. Words representation
         self._gru_word = nn.GRU(input_size=emb_size, hidden_size=hid,
@@ -94,7 +100,7 @@ class HAN(nn.Module):
     @classmethod
     def from_imbd_ckpt(cls, path_to_ckpt: Path) -> 'HAN':
         ckpt = torch.load(path_to_ckpt, map_location='cpu')
-        model = cls(**ckpt['checkpoint_data']['params'])
+        model = cls(load_glove=False, **ckpt['checkpoint_data']['params'])
         model.load_state_dict(ckpt['model_state_dict'])
         print(f'Model was loaded from {path_to_ckpt}.')
         return model
@@ -130,9 +136,9 @@ class Attention(nn.Module):
 
 
 def get_pretrained_embedding(vocab: Dict[str, int],
-                             freeze_emb: bool
+                             freeze_emb: bool,
+                             emb_size: int
                              ) -> nn.Embedding:
-    emb_size = 100
     glove = torchtext.vocab.GloVe(name='6B', dim=emb_size, cache=VECTORS_CACHE)
     glove.unk_init = lambda x: torch.ones(emb_size, dtype=torch.float32)
 

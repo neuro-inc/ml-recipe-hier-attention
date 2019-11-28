@@ -1,2 +1,1 @@
-[ ! -f ../data/best.pth.zip ] && wget http://data.neu.ro/aclImdb.zip -O ../data/best.pth.zip
-[ ! -d ../data/best.pth ] && unzip ../data/best.pth.zip -d ../data
+[ ! -f ../results/pretrained_hier.pth.zip ] && wget data.neu.ro/pretrained_hier.pth -O ../results/pretrained_hier.pth

@@ -27,7 +27,8 @@ def test_model() -> None:
 
 def test_pretrained_emb() -> None:
     vocab = ImdbReviewsDataset.get_imdb_vocab(IMBD_ROOT)
-    embedding = get_pretrained_embedding(vocab=vocab, freeze_emb=True)
+    embedding = get_pretrained_embedding(vocab=vocab, freeze_emb=True,
+                                         emb_size=100)
 
     def word2emb(w: str) -> torch.LongTensor:
         ind_in_vocab = torch.tensor(vocab[w], dtype=torch.int64)
