@@ -35,6 +35,7 @@ class HAN(nn.Module):
 
         # 3. Classification
         self._fc1 = nn.Linear(in_features=2 * hid, out_features=hid_fc)
+        self._dropout = nn.Dropout(p=0.5)
         self._fc2 = nn.Linear(in_features=hid_fc, out_features=1)
 
         # Saving args for convinient restoring from ckpt
@@ -69,6 +70,8 @@ class HAN(nn.Module):
         # 3. Classification
 
         x = relu(self._fc1(x))  # [txt, hid_fc]
+
+        x = self._dropout(x)  # [txt, hid_fc]
 
         x = self._fc2(x)  # [text, 1]
 
@@ -110,12 +113,14 @@ class Attention(nn.Module):
                              out_features=out_features,
                              bias=True)
 
+        self._dropout = nn.Dropout(p=0.5)
+
         self._context = nn.Parameter(torch.randn((context_size, 1)).float())
 
     def forward(self, x: FloatTensor) -> FloatTensor:
         # [bs, seq, emb]
 
-        x = tanh(self._fc(x))  # [bs, seq, hid]
+        x = tanh(self._dropout(self._fc(x)))  # [bs, seq, hid]
 
         scores = softmax(x.matmul(self._context), dim=1)  # [bs, seq, 1]
 

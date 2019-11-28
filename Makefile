@@ -40,7 +40,6 @@ TRAINING_MACHINE_TYPE?=gpu-small
 # WARNING: removing authentication might disclose your sensitive data stored in the job.
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
-# TRAINING_COMMAND="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train.py --data $(DATA_DIR)'"
 TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && python -u train_catalyst.py'"
 
 ##### COMMANDS #####

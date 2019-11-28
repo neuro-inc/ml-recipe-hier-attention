@@ -75,8 +75,6 @@ class ImdbReviewsDataset:
         files = list((self._path_to_data / 'neg').glob('*_*.txt')) + \
                 list((self._path_to_data / 'pos').glob('*_*.txt'))
 
-        files = files[:200]  # todo
-
         print(f'Dataset loading from {self._path_to_data}.')
         for file_path in tqdm(files):
             with open(file_path, 'r') as f:
