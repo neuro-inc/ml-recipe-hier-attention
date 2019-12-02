@@ -22,9 +22,8 @@ the test set, then visualize the model’s predictions.
 ![](img/visualization.png)
 
 ## Technologies
-* `Catalyst` as pipeline runner for deeplearning tasks.
-This new and fast developing [library](https://github.com/catalyst-team/catalyst) can significantly reduce the number of boiler code. If you are
-familiar with the Tensorflow ecosystem, you can think about it as a Keras for pytorch. This framework
+* `Catalyst` as pipeline runner for deep learning tasks. This new and rapidly developing [library](https://github.com/catalyst-team/catalyst) can significantly reduce the amount of boilerplate code. If you are familiar with the TensorFlow ecosystem,
+ you can think of Catalyst as Keras for PyTorch. This framework
 integrated with logging systems as well known [Tensorboard](https://www.tensorflow.org/tensorboard)
  and new [Weights & biases](https://www.wandb.com/).
 * `Pytorch` and `Torchtext` as main frameworks for deeplearning stuff. `NLTK` for data preprocessing.
