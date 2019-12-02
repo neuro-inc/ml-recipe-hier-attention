@@ -122,6 +122,7 @@ clean: clean-code clean-data clean-notebooks clean-results
 
 ##### JOBS #####
 
+.PHONY:
 .PHONY: training
 training: upload-code  ### Run a training job
 	$(NEURO) run \
