@@ -1,14 +1,7 @@
 catalyst==19.11.6
-tqdm==4.38.0
+wandb==0.8.17
 nltk==3.4.5
 torch==1.0.1
 torchtext==0.4.0
-torchvision==0.3.0
 numpy==1.17.3
 matplotlib==3.1.0
-wandb==0.8.16
-imageio==2.5.0
-opencv-python==4.1.1.26
-tensorboard==1.13.1
-tensorboardX==1.9
-scikit-learn==0.21.3

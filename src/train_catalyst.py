@@ -5,7 +5,7 @@ from pathlib import Path
 
 import catalyst.dl.callbacks as clb
 import torch
-from catalyst.dl.runner import SupervisedWandbRunner, SupervisedRunner
+import catalyst.dl.runner as runner_pkg
 from catalyst.utils import set_global_seed
 from torch import device as tdevice
 from torch.cuda import is_available
@@ -33,10 +33,10 @@ def main(args: Namespace) -> None:
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     if is_wandb:
-        Runner = SupervisedWandbRunner
+        Runner = runner_pkg.SupervisedWandbRunner
         extra_args = {'monitoring_params': {'project': 'neuro_imdb'}}
     else:
-        Runner = SupervisedRunner
+        Runner = runner_pkg.SupervisedRunner
         extra_args = {}
 
     runner = Runner(input_key='features', output_key=None,
