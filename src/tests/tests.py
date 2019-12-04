@@ -56,7 +56,7 @@ def test_forward_for_dataset() -> None:
     # model
     model = HAN(vocab=dataset.vocab, freeze_emb=True)
 
-    # forwad
+    # forward
     output = model(docs)
     pred = output['logits']
     w_scores = output['w_scores']

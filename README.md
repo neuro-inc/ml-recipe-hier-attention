@@ -35,8 +35,6 @@ integrated with logging systems as well known [Tensorboard](https://www.tensorfl
 
 * `make setup` - before we start doing something, we have to run command, which prepare a docker container with all the necessary dependencies.
 
-* `make download-data-to-storage` - download dataset to storage.
-
 ### 1. Training from stratch.
 
 * `make training` - runs the job on Neuro platform with training pipeline which includes logging via **Tensorboard** and **W&B**.
@@ -46,7 +44,7 @@ integrated with logging systems as well known [Tensorboard](https://www.tensorfl
 
 * `make tensorboard` -  runs the job with tensorboard for monitoring training progress (losses, metrics, computational time and so on).
 
-* `make filebrowser` - runs the job that allows you to conveniently view your files on the storage in yoyr browser.
+* `make filebrowser` - runs the job that allows you to conveniently view your files on the storage in browser.
 
 ### 2. Running the notebook.
 

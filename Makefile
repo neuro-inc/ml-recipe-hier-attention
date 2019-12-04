@@ -40,7 +40,7 @@ TRAINING_MACHINE_TYPE?=gpu-small
 # WARNING: removing authentication might disclose your sensitive data stored in the job.
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
-TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && python -u train_catalyst.py'"
+TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && python -u train_catalyst.py'"
 
 ##### COMMANDS #####
 
@@ -75,16 +75,6 @@ setup: ### Setup remote environment
 	$(NEURO) kill $(SETUP_JOB)
 
 ##### STORAGE #####
-
-.PHONY: download-data-to-storage
-download-data-to-storage: upload-code  ### Upload IMDB reviews dataset to the platform storage from AWS
-	$(NEURO) run \
-	    --name $(DOWNLOADING_JOB) \
-	    --preset cpu-small \
-	    --volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):rw \
-		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
-		$(BASE_ENV_NAME) \
-	    "bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh'"
 
 .PHONY: upload-code
 upload-code:  ### Upload code directory to the platform storage
@@ -128,7 +118,6 @@ training: upload-code  ### Run a training job
 	$(NEURO) run \
 		--name $(TRAINING_JOB) \
 		--preset $(TRAINING_MACHINE_TYPE) \
-		--volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		--env EXPOSE_SSH=yes \
@@ -158,7 +147,9 @@ jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and op
 		--volume $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR):$(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		$(CUSTOM_ENV_NAME) \
-		'jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'
+		"bash -c '\
+			cd $(PROJECT_POSTFIX)/$(CODE_DIR) && bash download_data.sh && cd ../../ && \
+			jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'"
 
 .PHONY: kill-jupyter
 kill-jupyter:  ### Terminate the job with Jupyter Notebook
