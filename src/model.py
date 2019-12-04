@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 import torch
 import torchtext
@@ -123,12 +123,13 @@ class Attention(nn.Module):
 
         self._context = nn.Parameter(torch.randn((context_size, 1)).float())
 
-    def forward(self, x: FloatTensor) -> FloatTensor:
+    def forward(self, x: FloatTensor) -> Tuple[FloatTensor, FloatTensor]:
         # [bs, seq, emb]
 
         x = tanh(self._dropout(self._fc(x)))  # [bs, seq, hid]
 
-        scores = softmax(x.matmul(self._context), dim=1)  # [bs, seq, 1]
+        # [bs, seq, hid] x [hid, 1] = [bs, seq, 1]
+        scores = softmax(x.matmul(self._context), dim=1)
 
         x = x.mul(scores).sum(dim=1)  # [bs, hid]
 

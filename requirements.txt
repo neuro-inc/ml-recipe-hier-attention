@@ -1,7 +1,6 @@
 catalyst==19.11.6
 wandb==0.8.17
 nltk==3.4.5
-torch==1.0.1
 torchtext==0.4.0
 numpy==1.17.3
 matplotlib==3.1.0

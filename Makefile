@@ -77,7 +77,7 @@ setup: ### Setup remote environment
 ##### STORAGE #####
 
 .PHONY: download-data-to-storage
-download-data-to-storage: upload-code
+download-data-to-storage: upload-code  ### Upload IMDB reviews dataset to the platform storage from AWS
 	$(NEURO) run \
 	    --name $(DOWNLOADING_JOB) \
 	    --preset cpu-small \
@@ -99,7 +99,7 @@ clean-data:  ### Delete data directory from the platform storage
 	$(NEURO) rm --recursive $(DATA_DIR_STORAGE)
 
 .PHONE: clean-results
-clean-results:
+clean-results:   ### Clean results directory on the storage
 	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR)
 
 .PHONY: upload-notebooks
@@ -207,7 +207,6 @@ setup-local:  ### Install pip requirements locally
 .PHONY: lint
 lint:  ### Run static code analysis locally
 	flake8 .
-	mypy .
 
 ##### MISC #####
 
