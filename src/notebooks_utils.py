@@ -41,7 +41,7 @@ def display_predict(model: nn.Module,
 
         # sentence level score
         sent_score = float(s_score[0, i_sent])
-        sent_str.insert(0, (f'Sent #{i_sent + 1} | ', sent_score))
+        sent_str.insert(0, (f'Sent #{i_sent + 1} | ', sent_score / 3))
 
         display_weighted_sent(sent_str)
 
