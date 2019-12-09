@@ -15,7 +15,7 @@ from src.model import HAN, get_pretrained_embedding
 
 def test_model() -> None:
     vocab = {'cat': 1, 'dog': 2, 'bird': 3}  # 0 reserved for padding
-    model = HAN(vocab=vocab, freeze_emb=True)
+    model = HAN(vocab=vocab, freeze_emb=True, load_glove=False)
     batch = torch.randint(low=1, high=len(vocab),
                           size=(16, 12, 10), dtype=torch.int64
                           )
@@ -23,6 +23,32 @@ def test_model() -> None:
 
     assert torch.all(0 <= logits)
     assert torch.all(1 >= logits)
+
+
+def test_samples_independence_in_batch():
+    vocab = {'cat': 1, 'dog': 2, 'bird': 3}  # 0 reserved for padding
+    model = HAN(vocab=vocab, freeze_emb=True, load_glove=False)
+    model.eval()
+
+    def get_rand_sample() -> torch.Tensor:
+        return torch.randint(low=1, high=len(vocab),
+                             size=(1, 12, 10), dtype=torch.int64
+                             )
+
+    n_test = 5
+    for _ in range(n_test):
+        x_sample = get_rand_sample()
+        y_sample = get_rand_sample()
+        z_sample = get_rand_sample()
+
+        batch_a = torch.cat([x_sample, z_sample])
+        batch_b = torch.cat([y_sample, z_sample])
+
+        output_a = model(batch_a)
+        output_b = model(batch_b)
+
+        for key in ['logits', 'w_scores', 's_scores']:
+            torch.allclose(output_a[key][1], output_b[key][1])
 
 
 def test_pretrained_emb() -> None:
@@ -54,7 +80,7 @@ def test_forward_for_dataset() -> None:
     n_doc, n_snt, n_wrd = docs.shape
 
     # model
-    model = HAN(vocab=dataset.vocab, freeze_emb=True)
+    model = HAN(vocab=dataset.vocab, freeze_emb=True, load_glove=False)
 
     # forward
     output = model(docs)
@@ -89,7 +115,7 @@ def test_batch_size() -> None:
     bs = 384
 
     vocab = ImdbReviewsDataset.get_imdb_vocab(IMBD_ROOT)
-    model = HAN(vocab=vocab, freeze_emb=True)
+    model = HAN(vocab=vocab, freeze_emb=True, load_glove=False)
     model.cuda()
 
     batch = torch.ones((bs, TXT_CLIP, SNT_CLIP),
