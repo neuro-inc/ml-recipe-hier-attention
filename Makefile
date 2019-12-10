@@ -1,7 +1,7 @@
 ##### PATHS #####
 
 DATA_DIR?=data
-CODE_DIR?=code
+CODE_DIR?=src
 NOTEBOOKS_DIR?=notebooks
 RESULTS_DIR?=results
 
@@ -20,6 +20,7 @@ TRAINING_JOB?=training-$(PROJECT_POSTFIX)
 JUPYTER_JOB?=jupyter-$(PROJECT_POSTFIX)
 TENSORBOARD_JOB?=tensorboard-$(PROJECT_POSTFIX)
 FILEBROWSER_JOB?=filebrowser-$(PROJECT_POSTFIX)
+DOWNLOADING_JOB?=downloading-$(PROJECT_POSTFIX)
 
 ##### ENVIRONMENTS #####
 
@@ -39,8 +40,7 @@ TRAINING_MACHINE_TYPE?=gpu-small
 # WARNING: removing authentication might disclose your sensitive data stored in the job.
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
-# TRAINING_COMMAND="bash -c 'cd $(PROJECT_PATH_ENV) && python -u $(CODE_DIR)/train.py --data $(DATA_DIR)'"
-TRAINING_COMMAND?='echo "Replace this placeholder with a training script execution"'
+TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && python -u train_catalyst.py'"
 
 ##### COMMANDS #####
 
@@ -84,13 +84,13 @@ upload-code:  ### Upload code directory to the platform storage
 clean-code:  ### Delete code directory from the platform storage
 	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(CODE_DIR)
 
-.PHONY: upload-data
-upload-data:  ### Upload data directory to the platform storage
-	$(NEURO) cp --recursive --update --no-target-directory $(DATA_DIR) $(DATA_DIR_STORAGE)
-
 .PHONY: clean-data
 clean-data:  ### Delete data directory from the platform storage
 	$(NEURO) rm --recursive $(DATA_DIR_STORAGE)
+
+.PHONE: clean-results
+clean-results:   ### Clean results directory on the storage
+	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR)
 
 .PHONY: upload-notebooks
 upload-notebooks:  ### Upload notebooks directory to the platform storage
@@ -105,22 +105,24 @@ clean-notebooks:  ### Delete notebooks directory from the platform storage
 	$(NEURO) rm --recursive $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR)
 
 .PHONY: upload  ### Upload code, data, and notebooks directories to the platform storage
-upload: upload-code upload-data upload-notebooks
+upload: upload-code upload-notebooks
 
 .PHONY: clean  ### Delete code, data, and notebooks directories from the platform storage
-clean: clean-code clean-data clean-notebooks
+clean: clean-code clean-data clean-notebooks clean-results
 
 ##### JOBS #####
 
+.PHONY:
 .PHONY: training
-training:  ### Run a training job
+training: upload-code  ### Run a training job
 	$(NEURO) run \
 		--name $(TRAINING_JOB) \
 		--preset $(TRAINING_MACHINE_TYPE) \
-		--volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		--env EXPOSE_SSH=yes \
+		--env PYTHONPATH=$(PROJECT_PATH_ENV) \
+		--env WANDB_API_KEY \
 		$(CUSTOM_ENV_NAME) \
 		$(TRAINING_COMMAND)
 
@@ -140,12 +142,13 @@ jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and op
 		--http 8888 \
 		$(HTTP_AUTH) \
 		--browse \
-		--volume $(DATA_DIR_STORAGE):$(PROJECT_PATH_ENV)/$(DATA_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR):$(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		$(CUSTOM_ENV_NAME) \
-		'jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'
+		"bash -c '\
+			cd $(PROJECT_POSTFIX)/$(CODE_DIR) && bash download_data.sh && cd ../../ && \
+			jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'"
 
 .PHONY: kill-jupyter
 kill-jupyter:  ### Terminate the job with Jupyter Notebook
@@ -194,7 +197,6 @@ setup-local:  ### Install pip requirements locally
 .PHONY: lint
 lint:  ### Run static code analysis locally
 	flake8 .
-	mypy .
 
 ##### MISC #####
 

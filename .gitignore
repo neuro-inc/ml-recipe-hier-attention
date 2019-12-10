@@ -1,7 +1,12 @@
-.idea*
+.idea/*
+*.vector_cache/*
+*__pycache__*
+*.DS_Store*
+*wandb_token.txt*
+*results*
 
 # Byte-compiled / optimized / DLL files
-__pycache__/
+*__pycache__/
 *.py[cod]
 *$py.class
 
