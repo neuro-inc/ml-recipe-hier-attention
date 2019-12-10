@@ -1,4 +1,4 @@
-catalyst==19.11.6
+catalyst==19.12
 wandb==0.8.17
 nltk==3.4.5
 torchtext==0.4.0
