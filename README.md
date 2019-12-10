@@ -1,62 +1,79 @@
 # Hierarchical attention for sentiment classification.
 
-Our recipe based on highly cited paper
-[Hierarchical Attention Networks for Document Classification](https://arxiv.org/abs/1608.07775),
-(Z. Yang et al.) published in 2017. We will classify the IMDB's reviews as positive and negative
+Our recipe is based on highly cited paper
+[Hierarchical Attention Networks for Document Classification](https://arxiv.org/abs/1608.07775) (Z. Yang et al.), 
+published in 2017. We classify the IMDB's reviews as positive and negative
 (25k reviews for train and the same number for test). The proposed neural network architecture takes two steps:
-1. It encodes sentences. The attention mechanism predicts the importance for each **word** in the final embedding of a **sentence**.
-2. It encodes texts. This time, the attention mechanism predicts the importance for each **sentence** in the final embedding of a **text**.
+1. It encodes **sentences**. The attention mechanism predicts the importance for each **word** in the final embedding of a **sentence**.
+2. It encodes **texts**. The attention mechanism predicts the importance for each **sentence** in the final embedding of a **text**.
 
-This architecture is interesting because we can make an illustration to understand what words and sentences were
-important for prediction. More information can be found in the original article.
+This architecture is exciting because we can make an illustration to understand what words and sentences were
+important for prediction. You can find more information in the original article.
 
 The architecture of Hierarchical Attention Network (HAN):
 
 ![](img/scheme.png)
 
-The recipe includes two scenarios. You can **train the model** yourself from scratch with
-ability to make changes in data processing or architecture, it isn't tricky.
-Or/and you can **play with a trained model** in jupyter notebook: write your review or pick the random one from 
+The recipe includes two scenarios:
+* You can **train the model** yourself from scratch with
+ability to make changes in data processing or architecture.
+* You can **play with a trained model** in jupyter notebook: write your review or pick the random one from 
 the test set, then visualize the model’s predictions.
 
 ![](img/visualization.png)
 
 ## Technologies
-* `Catalyst` as pipeline runner for deep learning tasks. This new and rapidly developing [library](https://github.com/catalyst-team/catalyst) can significantly reduce the amount of boilerplate code. If you are familiar with the TensorFlow ecosystem,
- you can think of Catalyst as Keras for PyTorch. This framework
+* `Catalyst` as pipeline runner for deep learning tasks. This new and rapidly developing 
+[library](https://github.com/catalyst-team/catalyst) can significantly reduce the amount of boilerplate code. 
+If you are familiar with the TensorFlow ecosystem, you can think of Catalyst as Keras for PyTorch. This framework
 integrated with logging systems as well known [Tensorboard](https://www.tensorflow.org/tensorboard)
- and new [Weights & biases](https://www.wandb.com/).
-* `Pytorch` and `Torchtext` as main frameworks for deeplearning stuff. `NLTK` for data preprocessing.
+and new [Weights & biases](https://www.wandb.com/).
+* `Pytorch` and `Torchtext` as main frameworks for deep learning stuff. 
+* `NLTK` for data preprocessing.
 
+# Quick Start
 
-## Running commands
+##### 0. Sign up at [neu.ro](https://neu.ro)
 
-### 0. Setup.
+##### 1. Install CLI and log in
+```shell
+pip install -U neuromation
+neuro login
+```
 
-* `make setup` - before we start doing something, we have to run command, which prepare a docker container with all the necessary dependencies.
+##### 2. Run the recipe
 
-### 1. Training from stratch.
+```shell
+git clone git@github.com:neuromation/ml-recipe-hier-attention.git
+cd ml-recipe-hier-attention
+make setup
+make jupyter
+```
 
-* `make training` - runs the job on Neuro platform with training pipeline which includes logging via **Tensorboard** and **W&B**.
-    * If you want to use W&B for logging, please, setup enironment variable before running training command:
-     `export WANDB_API_KEY=YOUR_TOKEN`. Then a new project with name `neuro_imdb` will appear in the list of your projects in W&B's Web UI.
-    * Note. First run requires more time than next one, since it is necessary to download pretrained word embeddings for Glove and warm up the computing resources.
+# Training commands 
 
-* `make tensorboard` -  runs the job with tensorboard for monitoring training progress (losses, metrics, computational time and so on).
+##### 0. Setup.
 
-* `make filebrowser` - runs the job that allows you to conveniently view your files on the storage in browser.
+* `make setup` - before we start doing something, we have to run command, which prepares a docker container with all the necessary dependencies.
 
-### 2. Running the notebook.
+##### 1. Training from scratch.
 
-* `make jupyter` - run job with jupyter. If you skipped training step, you can download our pretrained model from notebook.
+* `make training` - runs the job on Neuro platform with training pipeline, which includes logging via **Tensorboard** and **W&B**.
+    * If you want to use W&B for logging, please, setup environment variable before running training command:
+     `export WANDB_API_KEY=YOUR_TOKEN`. Then a new project with name `neuro_imdb` appears in the list of your projects in W&B's Web UI.
+    * Note. The first run requires more time than the next one since it is necessary to download pre-trained word embeddings for Glove and warm up the computing resources.
 
+* `make tensorboard` -  runs the job with Tensorboard for monitoring training progress (losses, metrics, computational time, etc).
 
+* `make filebrowser` - runs the job that allows you to view your files on the storage in browser conveniently.
 
-<br/><br/>
-<br/><br/>
-<br/><br/>
+##### 2. Running the notebook.
 
-# Autogenrated description:
+* `make jupyter` - run job with jupyter. If you skip the training step, you can download our pre-trained model from the notebook.
+
+<br/><br/><br/><br/><br/><br/>
+
+# Autogenerated description:
 
 This project is created from 
 [Neuro Platform Project Template](https://github.com/neuromation/cookiecutter-neuro-project).
