@@ -60,7 +60,7 @@ help:
 
 .PHONY: setup
 setup: ### Setup remote environment
-	$(NEURO) kill $(SETUP_JOB) >/dev/null 2>&1
+	$(NEURO) kill $(SETUP_JOB) >/dev/null 2>&1 || :
 	$(NEURO) run \
 		--name $(SETUP_JOB) \
 		--preset cpu-small \
@@ -128,7 +128,7 @@ training: upload-code  ### Run a training job
 
 .PHONY: kill-training
 kill-training:  ### Terminate the training job
-	$(NEURO) kill $(TRAINING_JOB)
+	$(NEURO) kill $(TRAINING_JOB) || :
 
 .PHONY: connect-training
 connect-training:  ### Connect to the remote shell running on the training job
@@ -147,12 +147,12 @@ jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and op
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		$(CUSTOM_ENV_NAME) \
 		"bash -c '\
-			cd $(PROJECT_POSTFIX)/$(CODE_DIR) && bash download_data.sh && cd ../../ && \
+			cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && cd ../../ && \
 			jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'"
 
 .PHONY: kill-jupyter
 kill-jupyter:  ### Terminate the job with Jupyter Notebook
-	$(NEURO) kill $(JUPYTER_JOB)
+	$(NEURO) kill $(JUPYTER_JOB) || :
 
 .PHONY: tensorboard
 tensorboard:  ### Run a job with TensorBoard and open UI in the default browser
@@ -168,7 +168,7 @@ tensorboard:  ### Run a job with TensorBoard and open UI in the default browser
 
 .PHONY: kill-tensorboard
 kill-tensorboard:  ### Terminate the job with TensorBoard
-	$(NEURO) kill $(TENSORBOARD_JOB)
+	$(NEURO) kill $(TENSORBOARD_JOB) || :
 
 .PHONY: filebrowser
 filebrowser:  ### Run a job with File Browser and open UI in the default browser
@@ -183,7 +183,7 @@ filebrowser:  ### Run a job with File Browser and open UI in the default browser
 
 .PHONY: kill-filebrowser
 kill-filebrowser:  ### Terminate the job with File Browser
-	$(NEURO) kill $(FILEBROWSER_JOB)
+	$(NEURO) kill $(FILEBROWSER_JOB) || :
 
 .PHONY: kill  ### Terminate all jobs of this project
 kill: kill-training kill-jupyter kill-tensorboard kill-filebrowser
