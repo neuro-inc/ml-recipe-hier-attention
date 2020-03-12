@@ -78,7 +78,7 @@ endif
 	$(NEURO) kill $(SETUP_JOB)
 
 .PHONY: __bake
-__bake: upload-code upload-data upload-notebooks
+__bake: upload
 	echo "#!/usr/bin/env bash" > /tmp/jupyter.sh
 	echo "jupyter notebook \
             --no-browser \
