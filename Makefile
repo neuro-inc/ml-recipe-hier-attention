@@ -82,7 +82,8 @@ endif
 .PHONY: __bake
 __bake: upload-code upload-notebooks
 	echo "#!/usr/bin/env bash" > /tmp/jupyter.sh
-	echo "jupyter notebook \
+	echo "sh download_data.sh
+	      jupyter notebook \
             --no-browser \
             --ip=0.0.0.0 \
             --allow-root \
