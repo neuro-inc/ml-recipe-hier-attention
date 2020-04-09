@@ -37,12 +37,21 @@ DATA_DIR_STORAGE?=$(PROJECT_PATH_STORAGE)/$(DATA_DIR)
 
 # The type of the training machine (run `neuro config show` to see the list of available types).
 TRAINING_MACHINE_TYPE?=gpu-small
+
+# Extra options for `neuro run` targets:
+#   make train RUN_EXTRA="--env MYVAR=value"
+RUN_EXTRA?=
+
 # HTTP authentication (via cookies) for the job's HTTP link.
 # Set `HTTP_AUTH?=--no-http-auth` to disable any authentication.
 # WARNING: removing authentication might disclose your sensitive data stored in the job.
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
 TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && python -u train_catalyst.py'"
+
+JUPYTER_CMD=bash -c '\
+    sh $(PROJECT_PATH_ENV)/$(CODE_DIR)/download_data.sh && \
+    jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'
 
 ##### COMMANDS #####
 
@@ -63,7 +72,7 @@ help:
 .PHONY: setup
 setup: ### Setup remote environment
 	$(NEURO) kill $(SETUP_JOB) >/dev/null 2>&1 || :
-	$(NEURO) run \
+	$(NEURO) run $(RUN_EXTRA) \
 		--name $(SETUP_JOB) \
 		--preset cpu-small \
 		--detach \
@@ -139,7 +148,7 @@ clean: clean-code clean-data clean-notebooks clean-results
 .PHONY:
 .PHONY: training
 training: upload-code  ### Run a training job
-	$(NEURO) run \
+	$(NEURO) run $(RUN_EXTRA) \
 		--name $(TRAINING_JOB) \
 		--preset $(TRAINING_MACHINE_TYPE) \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
@@ -160,7 +169,7 @@ connect-training:  ### Connect to the remote shell running on the training job
 
 .PHONY: jupyter
 jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and open UI in the default browser
-	$(NEURO) run \
+	$(NEURO) run $(RUN_EXTRA) \
 		--name $(JUPYTER_JOB) \
 		--preset $(TRAINING_MACHINE_TYPE) \
 		--http 8888 \
@@ -170,9 +179,7 @@ jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and op
 		--volume $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR):$(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
 		$(CUSTOM_ENV_NAME) \
-		"bash -c '\
-			cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && cd ../../ && \
-			jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'"
+		$(JUPYTER_CMD)
 
 .PHONY: kill-jupyter
 kill-jupyter:  ### Terminate the job with Jupyter Notebook
@@ -180,7 +187,7 @@ kill-jupyter:  ### Terminate the job with Jupyter Notebook
 
 .PHONY: tensorboard
 tensorboard:  ### Run a job with TensorBoard and open UI in the default browser
-	$(NEURO) run \
+	$(NEURO) run $(RUN_EXTRA) \
 		--name $(TENSORBOARD_JOB) \
 		--preset cpu-small \
 		--http 6006 \
@@ -196,14 +203,15 @@ kill-tensorboard:  ### Terminate the job with TensorBoard
 
 .PHONY: filebrowser
 filebrowser:  ### Run a job with File Browser and open UI in the default browser
-	$(NEURO) run \
+	$(NEURO) run $(RUN_EXTRA) \
 		--name $(FILEBROWSER_JOB) \
 		--preset cpu-small \
 		--http 80 \
 		$(HTTP_AUTH) \
 		--browse \
 		--volume $(PROJECT_PATH_STORAGE):/srv:rw \
-		filebrowser/filebrowser
+		filebrowser/filebrowser \
+		--noauth
 
 .PHONY: kill-filebrowser
 kill-filebrowser:  ### Terminate the job with File Browser
