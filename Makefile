@@ -91,15 +91,15 @@ endif
 .PHONY: __bake
 __bake: upload-code upload-notebooks
 	echo "#!/usr/bin/env bash" > /tmp/jupyter.sh
-	echo "sh download_data.sh
-	      jupyter notebook \
-            --no-browser \
-            --ip=0.0.0.0 \
-            --allow-root \
-            --NotebookApp.token= \
-            --NotebookApp.default_url=/notebooks/project-local/notebooks/demo.ipynb \
-            --NotebookApp.shutdown_no_activity_timeout=7200 \
-            --MappingKernelManager.cull_idle_timeout=7200 \
+	echo -e "sh download_data.sh \n \
+	         jupyter notebook \
+               --no-browser \
+               --ip=0.0.0.0 \
+               --allow-root \
+               --NotebookApp.token= \
+               --NotebookApp.default_url=/notebooks/project-local/notebooks/demo.ipynb \
+               --NotebookApp.shutdown_no_activity_timeout=7200 \
+               --MappingKernelManager.cull_idle_timeout=7200 \
 " >> /tmp/jupyter.sh
 	$(NEURO) cp /tmp/jupyter.sh $(PROJECT_PATH_STORAGE)/jupyter.sh
 	$(NEURO) exec --no-tty --no-key-check $(SETUP_JOB) \
