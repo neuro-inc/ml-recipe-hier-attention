@@ -88,7 +88,15 @@ workflows:
 
   main:
     jobs:
-      - build_and_test
+
+      - build_and_test:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /.*/
+
       - deploy:
           requires:
             - build_and_test
