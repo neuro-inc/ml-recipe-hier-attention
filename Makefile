@@ -2,6 +2,11 @@ BASE_ENV_VERSION=v1.5
 
 ##### PATHS #####
 
+# Data location in the environment where training or inference is happening.
+DATA_PATH_ENV=/data
+# Command to download and un-archive data to the environment
+DOWNLOAD_DATA_CMD=sh $(PROJECT_PATH_ENV)/$(CODE_DIR)/download_data.sh $(DATA_PATH_ENV)
+
 DATA_DIR?=data
 CODE_DIR?=src
 NOTEBOOKS_DIR?=notebooks
@@ -47,10 +52,12 @@ RUN_EXTRA?=
 # WARNING: removing authentication might disclose your sensitive data stored in the job.
 HTTP_AUTH?=--http-auth
 # Command to run training inside the environment. Example:
-TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && bash download_data.sh && python -u train_catalyst.py'"
+TRAINING_COMMAND?="bash -c 'cd $(PROJECT_PATH_ENV)/$(CODE_DIR) && \
+    $(DOWNLOAD_DATA_CMD) && \
+    python -u train_catalyst.py'"
 
 JUPYTER_CMD=bash -c '\
-    sh $(PROJECT_PATH_ENV)/$(CODE_DIR)/download_data.sh && \
+    $(DOWNLOAD_DATA_CMD) && \
     jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=$(PROJECT_PATH_ENV)'
 
 ##### COMMANDS #####
@@ -91,8 +98,8 @@ endif
 .PHONY: __bake
 __bake: upload-code upload-notebooks
 	echo "#!/usr/bin/env bash" > /tmp/jupyter.sh
-	echo -e "sh download_data.sh \n \
-	         jupyter notebook \
+	echo "$(PREPARE_DATA_CMD)" >> /tmp/jupyter.sh
+	echo "jupyter notebook \
                --no-browser \
                --ip=0.0.0.0 \
                --allow-root \
@@ -153,6 +160,7 @@ training: upload-code  ### Run a training job
 		--preset $(TRAINING_MACHINE_TYPE) \
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):ro \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
+		--env DATA_PATH_ENV=/data \
 		--env EXPOSE_SSH=yes \
 		--env PYTHONPATH=$(PROJECT_PATH_ENV) \
 		--env WANDB_API_KEY \
@@ -178,6 +186,7 @@ jupyter: upload-code upload-notebooks ### Run a job with Jupyter Notebook and op
 		--volume $(PROJECT_PATH_STORAGE)/$(CODE_DIR):$(PROJECT_PATH_ENV)/$(CODE_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(NOTEBOOKS_DIR):$(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR):rw \
 		--volume $(PROJECT_PATH_STORAGE)/$(RESULTS_DIR):$(PROJECT_PATH_ENV)/$(RESULTS_DIR):rw \
+		--env DATA_PATH_ENV=/data \
 		$(CUSTOM_ENV_NAME) \
 		$(JUPYTER_CMD)
 
@@ -210,6 +219,7 @@ filebrowser:  ### Run a job with File Browser and open UI in the default browser
 		$(HTTP_AUTH) \
 		--browse \
 		--volume $(PROJECT_PATH_STORAGE):/srv:rw \
+		--env DATA_PATH_ENV=/data \
 		filebrowser/filebrowser \
 		--noauth
 
