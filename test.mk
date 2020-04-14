@@ -4,7 +4,7 @@ CMD_PREPARE=\
   export DEBIAN_FRONTEND=noninteractive && \
   apt-get -qq update && \
   apt-get -qq install -y --no-install-recommends pandoc >/dev/null && \
-  $(PREPARE_DATA_CMD)
+  $(DOWNLOAD_DATA_CMD)
 
 CMD_NBCONVERT=\
   jupyter nbconvert \
@@ -14,8 +14,7 @@ CMD_NBCONVERT=\
   --to=asciidoc \
   --ExecutePreprocessor.timeout=600 \
   --output=/tmp/out \
-  $(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR)/demo.ipynb && \
-  echo "Test succeeded: PROJECT_PATH_ENV=$(PROJECT_PATH_ENV) TRAINING_MACHINE_TYPE=$(TRAINING_MACHINE_TYPE)"
+  $(PROJECT_PATH_ENV)/$(NOTEBOOKS_DIR)/demo.ipynb
 
 SUCCESS_MSG=Test succeeded: PROJECT_PATH_ENV=$(PROJECT_PATH_ENV) TRAINING_MACHINE_TYPE=$(TRAINING_MACHINE_TYPE)
 

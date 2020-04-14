@@ -98,7 +98,7 @@ endif
 .PHONY: __bake
 __bake: upload-code upload-notebooks
 	echo "#!/usr/bin/env bash" > /tmp/jupyter.sh
-	echo "$(PREPARE_DATA_CMD)" >> /tmp/jupyter.sh
+	echo "$(DOWNLOAD_DATA_CMD)" >> /tmp/jupyter.sh
 	echo "jupyter notebook \
                --no-browser \
                --ip=0.0.0.0 \
