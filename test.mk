@@ -30,4 +30,12 @@ test_jupyter: jupyter
 
 .PHONY: test_jupyter_baked
 test_jupyter_baked: PROJECT_PATH_ENV=/project-local
-test_jupyter_baked: test_jupyter
+test_jupyter_baked:
+	$(NEURO) run $(RUN_EXTRA) \
+		--name $(JOB_NAME) \
+		--preset $(TRAINING_MACHINE_TYPE) \
+		$(CUSTOM_ENV_NAME) \
+		bash -c '$(CMD_PREPARE) && $(CMD_NBCONVERT)'
+	$(NEURO) status $(JUPYTER_JOB) | tee /dev/stderr | grep -q "Exit code: 0"
+	@echo $(SUCCESS_MSG)
+	$(NEURO) kill $(JOB_NAME)
