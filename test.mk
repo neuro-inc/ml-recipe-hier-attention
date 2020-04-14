@@ -34,6 +34,7 @@ test_jupyter_baked:
 	$(NEURO) run $(RUN_EXTRA) \
 		--name $(JOB_NAME) \
 		--preset $(TRAINING_MACHINE_TYPE) \
+		--env DATA_PATH_ENV=/data \
 		$(CUSTOM_ENV_NAME) \
 		bash -c '$(CMD_PREPARE) && $(CMD_NBCONVERT)'
 	$(NEURO) status $(JOB_NAME) | tee /dev/stderr | grep -q "Exit code: 0"
