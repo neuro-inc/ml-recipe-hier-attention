@@ -23,6 +23,8 @@ SUCCESS_MSG=Test succeeded: PROJECT_PATH_ENV=$(PROJECT_PATH_ENV) TRAINING_MACHIN
 test_jupyter: JUPYTER_CMD=bash -c '$(CMD_PREPARE) && $(CMD_NBCONVERT)'
 test_jupyter: jupyter
 	@# This is a workaround for https://github.com/neuromation/platform-client-python/issues/1470
+	while $(NEURO) status $(JUPYTER_JOB) | tee /dev/stderr | grep -q "Status: running"; \
+        do sleep 1 && echo "Waiting for job to terminate..." ; done
 	$(NEURO) status $(JUPYTER_JOB) | tee /dev/stderr | grep -q "Exit code: 0"
 	@echo $(SUCCESS_MSG)
 	$(MAKE) kill-jupyter
@@ -37,6 +39,8 @@ test_jupyter_baked:
 		--env DATA_PATH_ENV=/data \
 		$(CUSTOM_ENV_NAME) \
 		bash -c '$(CMD_PREPARE) && $(CMD_NBCONVERT)'
+	while $(NEURO) status $(JOB_NAME) | tee /dev/stderr | grep -q "Status: running"; \
+        do sleep 1 && echo "Waiting for job to terminate..." ; done
 	$(NEURO) status $(JOB_NAME) | tee /dev/stderr | grep -q "Exit code: 0"
 	@echo $(SUCCESS_MSG)
 	$(NEURO) kill $(JOB_NAME)
