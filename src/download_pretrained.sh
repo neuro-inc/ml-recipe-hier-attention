@@ -1,1 +1,2 @@
-wget -nc -q data.neu.ro/pretrained_hier.pth -O ../results/pretrained_hier.pth
+OUT=${1:-../results/pretrained_hier.pth}
+wget -nc data.neu.ro/pretrained_hier.pth -O $OUT

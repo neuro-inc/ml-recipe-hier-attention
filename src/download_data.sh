@@ -1,6 +1,10 @@
-DATA_PATH=${1:-/data}
+set -e
 
-mkdir -p ${DATA_PATH}
-wget -q -nc http://data.neu.ro/aclImdb.zip -O /tmp/aclImdb.zip
-unzip -n -qq /tmp/aclImdb.zip -d ${DATA_PATH}
-echo "Dataset downloaded and unzipped to ${DATA_PATH}"
+DATA_PATH=${1:-../data}
+
+echo "Downloading dataset to $DATA_PATH"
+mkdir -p $DATA_PATH
+wget -nc http://data.neu.ro/aclImdb.zip -O /tmp/aclImdb.zip
+echo "Unpacking..."
+unzip -n -q /tmp/aclImdb.zip -d $DATA_PATH
+echo "Finished"
