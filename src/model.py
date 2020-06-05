@@ -27,7 +27,8 @@ class HAN(nn.Module):
                 freeze_emb=freeze_emb, vocab=vocab, emb_size=emb_size)
         else:
             self._embedding = nn.Embedding(num_embeddings=len(vocab) + 1,
-                                           embedding_dim=emb_size)
+                                           embedding_dim=emb_size,
+                                           padding_idx=0)
 
         # 1. Words representation
         self._gru_word = nn.GRU(input_size=emb_size, hidden_size=hid,
@@ -151,5 +152,6 @@ def get_pretrained_embedding(vocab: Dict[str, int],
 
     weights[0, :] = glove.unk_init(None)
     embedding = nn.Embedding.from_pretrained(embeddings=weights,
-                                             freeze=freeze_emb)
+                                             freeze=freeze_emb,
+                                             padding_idx=0)
     return embedding
