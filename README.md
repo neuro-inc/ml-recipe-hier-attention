@@ -1,6 +1,6 @@
 # Hierarchical attention for sentiment classification
 
-Our recipe is based on a frequently cited paper, [Hierarchical Attention Networks for Document Classification](https://arxiv.org/abs/1608.07775) (Z. Yang et al.), published in 2017. We will classify the IMDB's reviews as positive and negative (25k reviews for training and the same number for testing). The proposed neural network’s architecture makes two steps:
+Our recipe is based on a frequently cited paper, [Hierarchical Attention Networks for Document Classification](https://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf) (Z. Yang et al.), published in 2017. We will classify the IMDB's reviews as positive and negative (25k reviews for training and the same number for testing). The proposed neural network’s architecture makes two steps:
 
 1. It encodes **sentences**. The attention mechanism predicts the importance of each **word** in the final embedding of a **sentence**.
 2. It encodes **texts**. The attention mechanism predicts the importance of each **sentence** in the final embedding of a **text**.
