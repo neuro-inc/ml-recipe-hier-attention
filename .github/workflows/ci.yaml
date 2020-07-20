@@ -42,12 +42,12 @@ jobs:
           set -e
           source venv/bin/activate
           export CUSTOM_ENV_NAME=image:$IMAGE_NAME:$IMAGE_TAG
-          make setup __BAKE_SETUP=yes | tee
+          make setup __BAKE_SETUP=yes
           export RUN_EXTRA="--tag=$JOBS_TAG"
-          make -f test.mk test_jupyter TRAINING_MACHINE_TYPE=cpu-small | tee
-          make -f test.mk test_jupyter TRAINING_MACHINE_TYPE=gpu-small | tee
-          make -f test.mk test_jupyter_baked TRAINING_MACHINE_TYPE=cpu-small | tee
-          make -f test.mk test_jupyter_baked TRAINING_MACHINE_TYPE=gpu-small | tee
+          make -f test.mk test_jupyter TRAINING_MACHINE_TYPE=cpu-small
+          make -f test.mk test_jupyter TRAINING_MACHINE_TYPE=gpu-small
+          make -f test.mk test_jupyter_baked TRAINING_MACHINE_TYPE=cpu-small
+          make -f test.mk test_jupyter_baked TRAINING_MACHINE_TYPE=gpu-small
       - name: Cleanup Jobs
         if: ${{ always() }}
         run: |
